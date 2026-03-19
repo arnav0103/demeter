@@ -10,7 +10,7 @@ import {
   Clock,
   RefreshCw,
 } from "lucide-react";
-import { fetchDashboardData, fetchAllCropHistories } from "../api/farmApi";
+import { useFarmData } from "../hooks/useFarmData";
 import { extractSensors, formatOutcome } from "../utils/dataUtils";
 import Sidebar from "../components/Sidebar";
 
@@ -246,9 +246,7 @@ function generateAlerts(points) {
         id: id++,
         severity: "info",
         title: `Cycle #${seq} completed`,
-        desc: `${cropName} (${cropId}): Sequence stored. ${
-          strategy ? `Strategy: ${strategy}.` : ""
-        } ${payload.reward_score != null ? `Reward: ${payload.reward_score}` : ""}`.trim(),
+        desc: `${cropName} (${cropId}): Sequence stored. ${strategy ? `Strategy: ${strategy}.` : ""} ${payload.reward_score != null ? `Reward: ${payload.reward_score}` : ""}`.trim(),
         time: timeAgo(ts),
         ts,
         agent: strategy ? "SUPERVISOR" : "JUDGE",
@@ -258,19 +256,18 @@ function generateAlerts(points) {
     }
   }
 
-  // De-duplicate: keep at most 3 alerts of same severity+title+crop
+  // Deduplicate: limit to 2 for cleaner UI
   const seen = new Map();
   const deduped = [];
   for (const a of alerts) {
     const key = `${a.severity}|${a.title}|${a.crop}`;
     const count = seen.get(key) || 0;
-    if (count < 3) {
+    if (count < 2) {
       deduped.push(a);
       seen.set(key, count + 1);
     }
   }
 
-  // Sort: critical first, then by time descending
   deduped.sort((a, b) => {
     const sevOrder = { critical: 0, warning: 1, info: 2 };
     if (sevOrder[a.severity] !== sevOrder[b.severity])
@@ -423,23 +420,16 @@ function AlertCard({ alert, onAck, onDismiss }) {
 // MAIN
 
 export default function Alerts() {
+  const { history, loading, refreshData } = useFarmData();
   const [alerts, setAlerts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [showAcked, setShowAcked] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
-    const dash = await fetchDashboardData();
-    const hist = await fetchAllCropHistories(dash);
-    const generated = generateAlerts(hist);
-    setAlerts(generated);
-    setLoading(false);
-  };
-
   useEffect(() => {
-    load();
-  }, []);
+    if (!loading) {
+      setAlerts(generateAlerts(history));
+    }
+  }, [history, loading]);
 
   const ack = (id) =>
     setAlerts((a) => a.map((al) => (al.id === id ? { ...al, ack: true } : al)));
@@ -491,7 +481,7 @@ export default function Alerts() {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <button
-              onClick={load}
+              onClick={refreshData}
               className="p-2 rounded-lg transition-colors"
               style={{
                 background: "var(--surface)",

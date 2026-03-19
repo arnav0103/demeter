@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchDashboardData } from "../api/farmApi";
-import { extractSensors, calculateMaturity } from "../utils/dataUtils";
+import { useFarmData } from "../hooks/useFarmData";
+import {
+  extractSensors,
+  calculateMaturity,
+  deriveCropStatus,
+} from "../utils/dataUtils";
 import {
   Search,
   SlidersHorizontal,
@@ -191,21 +195,18 @@ function CropCard({ data, onClick }) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { dashboard, loading, refreshData } = useFarmData();
   const [crops, setCrops] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStage, setFilterStage] = useState("All");
   const [filterCrop, setFilterCrop] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const loadData = async () => {
-    setRefreshing(true);
-    const data = await fetchDashboardData();
-    if (data?.length > 0) {
+  useEffect(() => {
+    if (dashboard) {
       setCrops(
-        data.map((item) => {
+        dashboard.map((item) => {
           const p = item.payload || {};
           const sensors = extractSensors(p);
           return {
@@ -214,12 +215,7 @@ export default function Dashboard() {
             name: p.crop || "Unknown",
             statusMsg: p.stage || "Growing",
             image: getImg(p.crop),
-            status:
-              p.outcome === "CRITICAL"
-                ? "Critical"
-                : p.action_taken === "PENDING_ACTION"
-                  ? "Attention"
-                  : "Healthy",
+            status: deriveCropStatus(p),
             maturity: calculateMaturity(p.sequence_number),
             seq: p.sequence_number,
             daysLeft: 30 - (p.sequence_number || 0),
@@ -230,13 +226,7 @@ export default function Dashboard() {
         }),
       );
     }
-    setLoading(false);
-    setRefreshing(false);
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
+  }, [dashboard]);
 
   const getImg = (name) => {
     if (!name) return null;
@@ -339,7 +329,7 @@ export default function Dashboard() {
 
           <div className="ml-auto flex items-center gap-2">
             <button
-              onClick={loadData}
+              onClick={refreshData}
               className="p-2 rounded-lg transition-colors"
               style={{
                 background: "var(--surface)",
@@ -347,10 +337,7 @@ export default function Dashboard() {
                 color: "var(--text-3)",
               }}
             >
-              <RefreshCw
-                size={15}
-                className={refreshing ? "animate-spin" : ""}
-              />
+              <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
             </button>
           </div>
         </header>
@@ -401,8 +388,7 @@ export default function Dashboard() {
               color: showFilters ? "var(--green)" : "var(--text-2)",
             }}
           >
-            <SlidersHorizontal size={14} />
-            Filters
+            <SlidersHorizontal size={14} /> Filters
             {activeFilters > 0 && (
               <span
                 className="px-1.5 py-0.5 rounded text-[10px] font-mono"

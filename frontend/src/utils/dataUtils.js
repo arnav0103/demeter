@@ -39,21 +39,24 @@ export const extractSensors = (payload) => {
     }
   }
   return {
-    temp: formatNumber(raw.temp ?? 0),
-    ph: formatNumber(raw.pH ?? 7.0),
-    humidity: formatNumber(raw.humidity ?? 0),
-    ec: formatNumber(raw.EC ?? 0),
+    temp: formatNumber(raw.temp ?? raw.Temp ?? 0),
+    ph: formatNumber(raw.ph ?? raw.pH ?? 7.0),
+    humidity: formatNumber(raw.humidity ?? raw.Humidity ?? 0),
+    ec: formatNumber(raw.ec ?? raw.EC ?? 0),
   };
 };
 
 export const calculateMaturity = (seq) => {
-  const val = (seq || 1) * 10;
-  return val > 100 ? 100 : val;
+  return Math.min((seq || 1) * 10, 100);
 };
 
 export const formatOutcome = (outcome) => {
   if (!outcome || typeof outcome !== "string") return "Monitoring...";
-  const parts = outcome.split("|").map((p) => p.trim());
+
+  // Strip reward suffix
+  const cleanOutcome = outcome.split("| Reward:")[0].trim();
+
+  const parts = cleanOutcome.split("|").map((p) => p.trim());
   let tags = [],
     notes = "";
   parts.forEach((part) => {
@@ -69,7 +72,46 @@ export const formatOutcome = (outcome) => {
       tags.push(part);
     }
   });
-  if (!tags.length && !notes) return outcome;
+  if (!tags.length && !notes) return cleanOutcome;
   const t = tags.join(" · ");
   return t && notes ? `${t} — ${notes}` : t || notes;
+};
+
+// Crop health status
+export const deriveCropStatus = (payload) => {
+  if (!payload) return "Healthy";
+  const s = extractSensors(payload);
+  const ph = parseFloat(s.ph) || 0;
+  const ec = parseFloat(s.ec) || 0;
+  const temp = parseFloat(s.temp) || 0;
+  const outcome = (payload.outcome || "").toLowerCase();
+  const action = (payload.action_taken || "").toUpperCase();
+
+  // Critical Thresholds
+  if (
+    (ph > 0 && ph < 4.5) ||
+    ph > 7.5 ||
+    ec > 3.5 ||
+    (temp > 0 && temp < 10) ||
+    temp > 35 ||
+    /fail|critical|disease|error/.test(outcome) ||
+    /DISEASE|FUNGAL|PEST/.test(action)
+  ) {
+    return "Critical";
+  }
+
+  // Warning/Attention Thresholds
+  if (
+    (ph > 0 && ph < 5.5) ||
+    ph > 6.5 ||
+    ec > 2.5 ||
+    (temp > 0 && temp < 17) ||
+    temp > 30 ||
+    /deteriorat|negative|attention|decline/.test(outcome) ||
+    /FLUSH|PRUNE|BOOST/.test(action)
+  ) {
+    return "Attention";
+  }
+
+  return "Healthy";
 };

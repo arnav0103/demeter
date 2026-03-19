@@ -54,7 +54,7 @@ const INPUT_FIELDS = [
     type: "number",
   },
   {
-    label: "Crop",
+    label: "Crop Type",
     name: "crop",
     icon: Sprout,
     color: "var(--green)",
@@ -68,6 +68,14 @@ const INPUT_FIELDS = [
     color: "var(--text-3)",
     type: "select",
     opts: ["Seedling", "Vegetative", "Flowering", "Fruiting"],
+  },
+  {
+    label: "Crop ID (Opt)",
+    name: "crop_id",
+    icon: Database,
+    color: "var(--text-3)",
+    type: "text",
+    placeholder: "e.g., Batch_A1",
   },
 ];
 
@@ -131,6 +139,7 @@ export default function AgentControl() {
     humidity: "60",
     crop: "Lettuce",
     stage: "Vegetative",
+    crop_id: "",
   });
 
   const showToast = (msg, type = "success") => {
@@ -445,7 +454,15 @@ export default function AgentControl() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {INPUT_FIELDS.map(
-                  ({ label, name, icon: Icon, color, type, opts }) => (
+                  ({
+                    label,
+                    name,
+                    icon: Icon,
+                    color,
+                    type,
+                    opts,
+                    placeholder,
+                  }) => (
                     <div key={name}>
                       <label
                         className="text-[10px] font-mono mb-1 block"
@@ -492,8 +509,9 @@ export default function AgentControl() {
                             onChange={(e) =>
                               setSensors({ ...sensors, [name]: e.target.value })
                             }
-                            type="number"
-                            step="0.1"
+                            type={type}
+                            placeholder={placeholder || ""}
+                            step={type === "number" ? "0.1" : undefined}
                             className="w-full pl-8 pr-3 py-2.5 rounded-lg text-sm font-mono outline-none"
                             style={{
                               background: "var(--bg-3)",

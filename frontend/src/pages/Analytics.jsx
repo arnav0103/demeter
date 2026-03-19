@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -16,7 +16,7 @@ import {
   PolarGrid,
   PolarAngleAxis,
 } from "recharts";
-import { fetchDashboardData, fetchAllCropHistories } from "../api/farmApi";
+import { useFarmData } from "../hooks/useFarmData";
 import { extractSensors } from "../utils/dataUtils";
 import { TrendingUp, TrendingDown, Minus, Download } from "lucide-react";
 import Sidebar from "../components/Sidebar";
@@ -48,11 +48,9 @@ function bucketHistory(points, range) {
   };
   const cutoff = now - (MS[range] || MS["24h"]);
 
-  const filtered = points.filter((p) => {
-    const t = new Date(p.payload?.timestamp || 0).getTime();
-    return t >= cutoff;
-  });
-
+  const filtered = points.filter(
+    (p) => new Date(p.payload?.timestamp || 0).getTime() >= cutoff,
+  );
   if (!filtered.length) return [];
 
   // Build buckets
@@ -119,7 +117,7 @@ function dailyCropActivity(points) {
   }));
 }
 
-// Build radar: how close each param is to ideal range
+// How close each param is to ideal range
 function buildRadar(points) {
   if (!points.length) return [];
   const sensors = points.map((p) => extractSensors(p.payload));
@@ -178,7 +176,6 @@ function buildAgentStats(points) {
     for (const agent of AGENTS) {
       if (action.toUpperCase().includes(agent)) counts[agent]++;
     }
-    // every stored point = at least one supervisor decision
     counts["SUPERVISOR"]++;
   }
 
@@ -189,14 +186,12 @@ function buildAgentStats(points) {
     // accuracy = % of points where outcome is NOT negative
     accuracy: points.length
       ? Math.round(
-          (points.filter((p) => {
-            const o = (p.payload?.outcome || "").toLowerCase();
-            return (
-              !o.includes("fail") &&
-              !o.includes("negative") &&
-              !o.includes("critical")
-            );
-          }).length /
+          (points.filter(
+            (p) =>
+              !/fail|negative|critical/.test(
+                (p.payload?.outcome || "").toLowerCase(),
+              ),
+          ).length /
             total) *
             100,
         )
@@ -317,21 +312,7 @@ function EmptyChart({ height = 180, message = "No data yet" }) {
 
 export default function Analytics() {
   const [range, setRange] = useState("24h");
-  const [loading, setLoading] = useState(true);
-  const [allPoints, setAllPoints] = useState([]); // every stored point from all crops
-  const [dashboard, setDashboard] = useState([]); // latest snapshot per crop
-
-  useEffect(() => {
-    setLoading(true);
-    fetchDashboardData().then(async (dash) => {
-      setDashboard(dash || []);
-      const hist = await fetchAllCropHistories(dash);
-      setAllPoints(hist);
-      setLoading(false);
-    });
-  }, []);
-
-  // STATS
+  const { dashboard, history: allPoints, loading } = useFarmData();
 
   const buckets = useMemo(
     () => bucketHistory(allPoints, range),
@@ -392,7 +373,7 @@ export default function Analytics() {
     >
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* ── Header ── */}
+        {/* Header */}
         <header
           className="flex-shrink-0 px-6 py-4 border-b flex items-center gap-4"
           style={{ borderColor: "var(--border)", background: "var(--bg-2)" }}
@@ -438,7 +419,7 @@ export default function Analytics() {
         </header>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
-          {/* ── Metric cards ── */}
+          {/* Metric cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <MetricCard
               loading={loading}
@@ -477,7 +458,7 @@ export default function Analytics() {
             />
           </div>
 
-          {/* ── pH + EC ── */}
+          {/* pH + EC */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div
               className="rounded-xl p-5"
@@ -626,7 +607,7 @@ export default function Analytics() {
             </div>
           </div>
 
-          {/* ── Temp + Humidity ── */}
+          {/* Temp + Humidity */}
           <div
             className="rounded-xl p-5"
             style={{
@@ -708,7 +689,7 @@ export default function Analytics() {
             )}
           </div>
 
-          {/* ── Activity bar + Radar ── */}
+          {/* Activity bar + Radar */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div
               className="rounded-xl p-5"
@@ -805,7 +786,7 @@ export default function Analytics() {
             </div>
           </div>
 
-          {/* ── Crop breakdown table ── */}
+          {/* Crop breakdown table */}
           <div
             className="rounded-xl overflow-hidden"
             style={{

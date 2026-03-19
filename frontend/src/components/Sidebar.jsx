@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Leaf,
@@ -11,38 +11,21 @@ import {
   ChevronRight,
   Zap,
 } from "lucide-react";
-import { fetchDashboardData } from "../api/farmApi";
-import { extractSensors } from "../utils/dataUtils";
-
-function countLiveAlerts(dashData) {
-  if (!dashData?.length) return 0;
-  return dashData.filter((d) => {
-    const s = extractSensors(d.payload);
-    const ph = parseFloat(s.ph);
-    const ec = parseFloat(s.ec);
-    const temp = parseFloat(s.temp);
-    const outcome = (d.payload?.outcome || "").toLowerCase();
-    return (
-      ph < 5.0 ||
-      ph > 7.5 ||
-      ec > 3.0 ||
-      temp > 34 ||
-      (temp > 0 && temp < 12) ||
-      /fail|critical|disease|pest|fungal/.test(outcome)
-    );
-  }).length;
-}
+import { useFarmData } from "../hooks/useFarmData";
+import { deriveCropStatus } from "../utils/dataUtils";
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [alertCount, setAlertCount] = useState(0);
   const loc = useLocation();
+  const { dashboard } = useFarmData();
 
-  useEffect(() => {
-    fetchDashboardData().then((data) => {
-      setAlertCount(countLiveAlerts(data));
-    });
-  }, []);
+  const alertCount = useMemo(() => {
+    if (!dashboard?.length) return 0;
+    return dashboard.filter((d) => {
+      const status = deriveCropStatus(d.payload);
+      return status === "Critical" || status === "Attention";
+    }).length;
+  }, [dashboard]);
 
   const NAV = [
     { label: "Crops", icon: LayoutGrid, path: "/dashboard" },

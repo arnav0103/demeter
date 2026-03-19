@@ -9,8 +9,8 @@ import {
   Zap,
   Activity,
 } from "lucide-react";
-import { fetchDashboardData } from "../api/farmApi";
-import { extractSensors } from "../utils/dataUtils";
+import { useFarmData } from "../hooks/useFarmData";
+import { extractSensors, deriveCropStatus } from "../utils/dataUtils";
 
 const FEATURES = [
   {
@@ -55,15 +55,10 @@ function computeFleetStats(dashData) {
     ...new Set(dashData.map((d) => d.payload?.crop).filter(Boolean)),
   ];
 
-  // Any active alert conditions?
-  const alerts = sensors.filter(
-    (s) =>
-      parseFloat(s.ph) < 5.5 ||
-      parseFloat(s.ph) > 6.5 ||
-      parseFloat(s.ec) > 2.5 ||
-      parseFloat(s.temp) > 30 ||
-      parseFloat(s.temp) < 15,
-  ).length;
+  const alerts = dashData.filter((d) => {
+    const status = deriveCropStatus(d.payload);
+    return status === "Critical" || status === "Attention";
+  }).length;
 
   return {
     ph: ph.toFixed(2),
@@ -77,10 +72,9 @@ function computeFleetStats(dashData) {
   };
 }
 
-// Build a real activity log from the last N payloads
-function buildActivityLog(dashData) {
-  if (!dashData?.length) return [];
-  return dashData
+function buildActivityLog(historyData) {
+  if (!historyData?.length) return [];
+  return historyData
     .slice(-5)
     .reverse()
     .map((d, i) => {
@@ -104,20 +98,22 @@ function buildActivityLog(dashData) {
 export default function LandingPage() {
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
+  const { dashboard, history, loading } = useFarmData();
+
   const [stats, setStats] = useState(null);
   const [log, setLog] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setMounted(true);
-    fetchDashboardData().then((data) => {
-      setStats(computeFleetStats(data));
-      setLog(buildActivityLog(data));
-      setLoading(false);
-    });
   }, []);
 
-  // Headline stats derived from real data, with friendly fallbacks
+  useEffect(() => {
+    if (!loading) {
+      setStats(computeFleetStats(dashboard));
+      setLog(buildActivityLog(history));
+    }
+  }, [dashboard, history, loading]);
+
   const headlineStats = stats
     ? [
         { val: stats.cropCount.toString(), label: "Active Crops" },
@@ -135,7 +131,7 @@ export default function LandingPage() {
         { val: "—", label: "Active Alerts" },
       ];
 
-  // Live sensor readings from real data
+  // Live sensor readings
   const readings = stats
     ? [
         {
@@ -291,7 +287,7 @@ export default function LandingPage() {
                 className="group flex items-center gap-3 px-7 py-3.5 rounded-xl font-semibold text-sm transition-all glow-green"
                 style={{ background: "var(--green)", color: "#0c1a0e" }}
               >
-                Enter Dashboard
+                Enter Dashboard{" "}
                 <ArrowRight
                   size={16}
                   className="group-hover:translate-x-1 transition-transform"
@@ -306,8 +302,7 @@ export default function LandingPage() {
                   background: "var(--surface)",
                 }}
               >
-                <Cpu size={16} />
-                Agent Control
+                <Cpu size={16} /> Agent Control
               </button>
             </div>
 

@@ -14,11 +14,16 @@ export const agentService = {
         EC: parseFloat(sensors.EC),
         temp: parseFloat(sensors.temp),
         humidity: parseFloat(sensors.humidity),
+        crop_id: sensors.crop_id || undefined,
       }),
     );
     formData.append(
       "metadata",
-      JSON.stringify({ crop: sensors.crop, stage: sensors.stage }),
+      JSON.stringify({
+        crop: sensors.crop,
+        stage: sensors.stage,
+        crop_id: sensors.crop_id || undefined,
+      }),
     );
     const res = await fetch(`${API_URL}/ingest`, {
       method: "POST",

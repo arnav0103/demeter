@@ -104,10 +104,9 @@ export default function CropDetails() {
         );
         const processed = sorted.map((item) => {
           const p = item.payload || {};
-          const sensors = extractSensors(p);
           return {
             ...item,
-            cleanSensors: sensors,
+            cleanSensors: extractSensors(p),
             parsedAction: parsePythonString(p.action_taken),
           };
         });
@@ -211,7 +210,7 @@ export default function CropDetails() {
             <span
               className="status-dot w-1.5 h-1.5 rounded-full"
               style={{ background: "var(--green)" }}
-            />
+            />{" "}
             LIVE
           </div>
 
@@ -316,7 +315,7 @@ export default function CropDetails() {
                       tickLine={false}
                     />
                     <YAxis
-                      domain={[5, 7.5]}
+                      domain={["auto", "auto"]}
                       tick={{
                         fontSize: 9,
                         fill: "var(--text-3)",
