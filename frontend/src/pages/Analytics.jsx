@@ -17,196 +17,28 @@ import {
   PolarAngleAxis,
 } from "recharts";
 import { useFarmData } from "../hooks/useFarmData";
-import { extractSensors } from "../utils/dataUtils";
+import {
+  extractSensors,
+  avg,
+  safePct,
+  bucketHistory,
+  dailyCropActivity,
+  buildRadar,
+  buildAgentStats,
+} from "../utils/dataUtils";
 import { TrendingUp, TrendingDown, Minus, Download } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 
-// HELPERS
-
-function avg(arr) {
-  if (!arr.length) return 0;
-  return arr.reduce((s, v) => s + v, 0) / arr.length;
-}
-
-function safePct(current, previous) {
-  if (!previous) return 0;
-  return parseFloat((((current - previous) / previous) * 100).toFixed(1));
-}
-
-// Group history points into buckets.
-// range = '24h' → group by hour (last 24 entries)
-// range = '7d'  → group by day  (last 7 days)
-// range = '30d' → group by day  (last 30 days)
-function bucketHistory(points, range) {
-  if (!points.length) return [];
-
-  const now = Date.now();
-  const MS = {
-    "24h": 24 * 60 * 60 * 1000,
-    "7d": 7 * 24 * 60 * 60 * 1000,
-    "30d": 30 * 24 * 60 * 60 * 1000,
-  };
-  const cutoff = now - (MS[range] || MS["24h"]);
-
-  const filtered = points.filter(
-    (p) => new Date(p.payload?.timestamp || 0).getTime() >= cutoff,
-  );
-  if (!filtered.length) return [];
-
-  // Build buckets
-  const bucketSize =
-    range === "24h"
-      ? 60 * 60 * 1000 // 1 hour
-      : 24 * 60 * 60 * 1000; // 1 day
-
-  const buckets = new Map();
-  for (const p of filtered) {
-    const t = new Date(p.payload?.timestamp || 0).getTime();
-    const key = Math.floor(t / bucketSize) * bucketSize;
-    if (!buckets.has(key)) buckets.set(key, []);
-    buckets.get(key).push(p);
-  }
-
-  return Array.from(buckets.entries())
-    .sort((a, b) => a[0] - b[0])
-    .map(([ts, pts]) => {
-      const date = new Date(ts);
-      const label =
-        range === "24h"
-          ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-          : date.toLocaleDateString([], { month: "short", day: "numeric" });
-
-      const sensors = pts.map((p) => extractSensors(p.payload));
-      return {
-        label,
-        ph: parseFloat(
-          avg(sensors.map((s) => parseFloat(s.ph) || 0)).toFixed(2),
-        ),
-        ec: parseFloat(
-          avg(sensors.map((s) => parseFloat(s.ec) || 0)).toFixed(2),
-        ),
-        temp: parseFloat(
-          avg(sensors.map((s) => parseFloat(s.temp) || 0)).toFixed(1),
-        ),
-        humidity: parseFloat(
-          avg(sensors.map((s) => parseFloat(s.humidity) || 0)).toFixed(1),
-        ),
-        count: pts.length,
-      };
-    });
-}
-
-// Build per-day crop count for "sequences per day" bar chart
-function dailyCropActivity(points) {
-  const map = new Map();
-  for (const p of points) {
-    const ts = p.payload?.timestamp;
-    if (!ts) continue;
-    const day = new Date(ts).toLocaleDateString([], {
-      month: "short",
-      day: "numeric",
-    });
-    map.set(day, (map.get(day) || 0) + 1);
-  }
-  const last7 = Array.from(map.entries()).slice(-7);
-  const maxVal = Math.max(...last7.map((e) => e[1]), 1);
-  return last7.map(([d, count]) => ({
-    d,
-    count,
-    target: Math.ceil(maxVal * 1.2),
-  }));
-}
-
-// How close each param is to ideal range
-function buildRadar(points) {
-  if (!points.length) return [];
-  const sensors = points.map((p) => extractSensors(p.payload));
-
-  const check = (vals, lo, hi) => {
-    const inRange = vals.filter((v) => v >= lo && v <= hi).length;
-    return Math.round((inRange / vals.length) * 100);
-  };
-
-  return [
-    {
-      metric: "pH",
-      value: check(
-        sensors.map((s) => parseFloat(s.ph)),
-        5.5,
-        6.5,
-      ),
-    },
-    {
-      metric: "EC",
-      value: check(
-        sensors.map((s) => parseFloat(s.ec)),
-        0.8,
-        2.5,
-      ),
-    },
-    {
-      metric: "Temp",
-      value: check(
-        sensors.map((s) => parseFloat(s.temp)),
-        18,
-        28,
-      ),
-    },
-    {
-      metric: "Humidity",
-      value: check(
-        sensors.map((s) => parseFloat(s.humidity)),
-        40,
-        80,
-      ),
-    },
-  ];
-}
-
-// Derive which agents appear in action_taken fields and how many times
-function buildAgentStats(points) {
-  const AGENTS = ["SUPERVISOR", "WATER", "ATMOSPHERIC", "JUDGE", "DOCTOR"];
-  const counts = Object.fromEntries(AGENTS.map((a) => [a, 0]));
-
-  for (const p of points) {
-    const action =
-      (p.payload?.action_taken || "") +
-      " " +
-      (p.payload?.strategic_intent || "");
-    for (const agent of AGENTS) {
-      if (action.toUpperCase().includes(agent)) counts[agent]++;
-    }
-    counts["SUPERVISOR"]++;
-  }
-
-  const total = Math.max(points.length, 1);
-  return AGENTS.map((name) => ({
-    name,
-    decisions: counts[name],
-    // accuracy = % of points where outcome is NOT negative
-    accuracy: points.length
-      ? Math.round(
-          (points.filter(
-            (p) =>
-              !/fail|negative|critical/.test(
-                (p.payload?.outcome || "").toLowerCase(),
-              ),
-          ).length /
-            total) *
-            100,
-        )
-      : 0,
-  })).filter((a) => a.decisions > 0);
-}
-
-// COMPONENTS
-
+// Shared Tooltip
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div
-      className="px-3 py-2 rounded-lg text-xs font-mono"
       style={{
+        padding: "8px 12px",
+        borderRadius: 8,
+        fontSize: 11,
+        fontFamily: "DM Mono, monospace",
         background: "var(--surface-2)",
         border: "1px solid var(--border)",
         color: "var(--text)",
@@ -222,40 +54,67 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
+// Metric Card
 function MetricCard({ label, value, unit, change, color, loading }) {
-  const up = change > 0,
-    flat = change === 0;
+  const up = change > 0;
+  const flat = change === 0;
   return (
     <div
-      className="rounded-xl p-5 card-hover"
+      className="card-hover"
       style={{
+        borderRadius: 12,
+        padding: 20,
         background: "var(--surface)",
         border: "1px solid var(--border)",
       }}
     >
       <div
-        className="text-[11px] font-mono mb-3"
-        style={{ color: "var(--text-3)" }}
+        style={{
+          fontSize: 10,
+          fontFamily: "DM Mono, monospace",
+          color: "var(--text-3)",
+          marginBottom: 10,
+        }}
       >
         {label}
       </div>
       {loading ? (
-        <div className="h-8 w-24 rounded shimmer" />
+        <div
+          className="shimmer"
+          style={{ height: 32, width: 96, borderRadius: 6 }}
+        />
       ) : (
         <div
-          className="text-3xl font-bold font-mono"
-          style={{ color: color || "var(--text)" }}
+          style={{
+            fontSize: 28,
+            fontWeight: 700,
+            fontFamily: "DM Mono, monospace",
+            color: color || "var(--text)",
+          }}
         >
           {value}
           <span
-            className="text-base font-normal ml-1"
-            style={{ color: "var(--text-3)" }}
+            style={{
+              fontSize: 14,
+              fontWeight: 400,
+              marginLeft: 4,
+              color: "var(--text-3)",
+            }}
           >
             {unit}
           </span>
         </div>
       )}
-      <div className="flex items-center gap-1 mt-2 text-[11px] font-mono">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          marginTop: 8,
+          fontSize: 11,
+          fontFamily: "DM Mono, monospace",
+        }}
+      >
         {flat ? (
           <Minus size={11} style={{ color: "var(--text-3)" }} />
         ) : up ? (
@@ -277,13 +136,23 @@ function MetricCard({ label, value, unit, change, color, loading }) {
 
 function SectionTitle({ children, sub }) {
   return (
-    <div className="mb-4">
-      <div className="text-[10px] font-mono" style={{ color: "var(--text-3)" }}>
+    <div style={{ marginBottom: 16 }}>
+      <div
+        style={{
+          fontSize: 10,
+          fontFamily: "DM Mono, monospace",
+          color: "var(--text-3)",
+        }}
+      >
         // {sub}
       </div>
       <h2
-        className="font-bold text-base mt-0.5"
-        style={{ color: "var(--text)" }}
+        style={{
+          fontWeight: 700,
+          fontSize: 15,
+          color: "var(--text)",
+          margin: "4px 0 0",
+        }}
       >
         {children}
       </h2>
@@ -294,14 +163,23 @@ function SectionTitle({ children, sub }) {
 function EmptyChart({ height = 180, message = "No data yet" }) {
   return (
     <div
-      className="flex items-center justify-center rounded-lg"
       style={{
         height,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 8,
         background: "var(--bg-3)",
         border: "1px dashed var(--border)",
       }}
     >
-      <span className="text-xs font-mono" style={{ color: "var(--text-3)" }}>
+      <span
+        style={{
+          fontSize: 11,
+          fontFamily: "DM Mono, monospace",
+          color: "var(--text-3)",
+        }}
+      >
         {message}
       </span>
     </div>
@@ -319,7 +197,7 @@ export default function Analytics() {
     [allPoints, range],
   );
 
-  // Compute averages from latest snapshot
+  // Latest fleet-wide averages
   const latestSensors = useMemo(() => {
     if (!dashboard.length) return { ph: 0, ec: 0, temp: 0 };
     const sensors = dashboard.map((d) => extractSensors(d.payload));
@@ -332,12 +210,11 @@ export default function Analytics() {
     };
   }, [dashboard]);
 
-  // Compare first half vs second half of history to get "change"
+  // First-half vs second-half for % change
   const prevSensors = useMemo(() => {
     if (allPoints.length < 2) return latestSensors;
-    const half = Math.floor(allPoints.length / 2);
     const older = allPoints
-      .slice(0, half)
+      .slice(0, Math.floor(allPoints.length / 2))
       .map((p) => extractSensors(p.payload));
     return {
       ph: parseFloat(avg(older.map((s) => parseFloat(s.ph) || 0)).toFixed(2)),
@@ -352,7 +229,7 @@ export default function Analytics() {
   const radarData = useMemo(() => buildRadar(allPoints), [allPoints]);
   const agentStats = useMemo(() => buildAgentStats(allPoints), [allPoints]);
 
-  // Export CSV of bucketed data
+  // CSV export
   const handleExport = () => {
     if (!buckets.length) return;
     const header = "time,ph,ec,temp,humidity,entries";
@@ -368,37 +245,83 @@ export default function Analytics() {
 
   return (
     <div
-      className="flex h-screen overflow-hidden"
-      style={{ background: "var(--bg)" }}
+      style={{
+        display: "flex",
+        height: "100vh",
+        overflow: "hidden",
+        background: "var(--bg)",
+      }}
     >
       <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden">
+
+      <main
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         {/* Header */}
         <header
-          className="flex-shrink-0 px-6 py-4 border-b flex items-center gap-4"
-          style={{ borderColor: "var(--border)", background: "var(--bg-2)" }}
+          style={{
+            flexShrink: 0,
+            padding: "0 24px",
+            height: 64,
+            borderBottom: "1px solid var(--border)",
+            background: "var(--bg-2)",
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+          }}
         >
           <div>
-            <h1 className="font-bold text-lg" style={{ color: "var(--text)" }}>
+            <h1
+              style={{
+                fontWeight: 700,
+                fontSize: 18,
+                color: "var(--text)",
+                margin: 0,
+              }}
+            >
               Analytics
             </h1>
-            <p className="text-xs font-mono" style={{ color: "var(--text-3)" }}>
+            <p
+              style={{
+                fontSize: 11,
+                fontFamily: "DM Mono, monospace",
+                color: "var(--text-3)",
+                margin: 0,
+              }}
+            >
               {loading
                 ? "Loading…"
                 : `${allPoints.length} data points across ${dashboard.length} crops`}
             </p>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div
+            style={{
+              marginLeft: "auto",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
             {["24h", "7d", "30d"].map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
-                className="px-3 py-1.5 rounded-lg text-[11px] font-mono transition-all"
                 style={{
+                  padding: "5px 12px",
+                  borderRadius: 8,
+                  fontSize: 11,
+                  fontFamily: "DM Mono, monospace",
+                  cursor: "pointer",
                   background:
                     range === r ? "rgba(74,222,128,0.12)" : "var(--surface)",
                   border: `1px solid ${range === r ? "rgba(74,222,128,0.3)" : "var(--border)"}`,
                   color: range === r ? "var(--green)" : "var(--text-3)",
+                  transition: "all 0.15s",
                 }}
               >
                 {r}
@@ -406,11 +329,18 @@ export default function Analytics() {
             ))}
             <button
               onClick={handleExport}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono"
               style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "5px 12px",
+                borderRadius: 8,
+                fontSize: 11,
+                fontFamily: "DM Mono, monospace",
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
                 color: "var(--text-3)",
+                cursor: "pointer",
               }}
             >
               <Download size={12} /> Export CSV
@@ -418,9 +348,25 @@ export default function Analytics() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+        {/* Scrollable content */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: 24,
+            display: "flex",
+            flexDirection: "column",
+            gap: 28,
+          }}
+        >
           {/* Metric cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: 12,
+            }}
+          >
             <MetricCard
               loading={loading}
               label="AVG pH"
@@ -459,158 +405,104 @@ export default function Analytics() {
           </div>
 
           {/* pH + EC */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div
-              className="rounded-xl p-5"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <SectionTitle sub={`${range.toUpperCase()} TRACE`}>
-                pH Over Time
-              </SectionTitle>
-              {buckets.length < 2 ? (
-                <EmptyChart
-                  height={180}
-                  message="Not enough data for this range"
-                />
-              ) : (
-                <ResponsiveContainer width="100%" height={180}>
-                  <AreaChart data={buckets}>
-                    <defs>
-                      <linearGradient id="phGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop
-                          offset="0%"
-                          stopColor="#4ade80"
-                          stopOpacity={0.3}
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor="#4ade80"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      stroke="var(--border)"
-                      strokeDasharray="3 3"
-                      vertical={false}
-                    />
-                    <XAxis
-                      dataKey="label"
-                      tick={{
-                        fontSize: 9,
-                        fill: "var(--text-3)",
-                        fontFamily: "DM Mono",
-                      }}
-                      axisLine={false}
-                      tickLine={false}
-                      interval="preserveStartEnd"
-                    />
-                    <YAxis
-                      domain={["auto", "auto"]}
-                      tick={{
-                        fontSize: 9,
-                        fill: "var(--text-3)",
-                        fontFamily: "DM Mono",
-                      }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area
-                      type="monotone"
-                      dataKey="ph"
-                      stroke="var(--green)"
-                      fill="url(#phGrad)"
-                      strokeWidth={2}
-                      dot={false}
-                      name="pH"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-
-            <div
-              className="rounded-xl p-5"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <SectionTitle sub={`${range.toUpperCase()} TRACE`}>
-                EC Concentration
-              </SectionTitle>
-              {buckets.length < 2 ? (
-                <EmptyChart
-                  height={180}
-                  message="Not enough data for this range"
-                />
-              ) : (
-                <ResponsiveContainer width="100%" height={180}>
-                  <AreaChart data={buckets}>
-                    <defs>
-                      <linearGradient id="ecGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop
-                          offset="0%"
-                          stopColor="#f59e0b"
-                          stopOpacity={0.25}
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor="#f59e0b"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      stroke="var(--border)"
-                      strokeDasharray="3 3"
-                      vertical={false}
-                    />
-                    <XAxis
-                      dataKey="label"
-                      tick={{
-                        fontSize: 9,
-                        fill: "var(--text-3)",
-                        fontFamily: "DM Mono",
-                      }}
-                      axisLine={false}
-                      tickLine={false}
-                      interval="preserveStartEnd"
-                    />
-                    <YAxis
-                      domain={["auto", "auto"]}
-                      tick={{
-                        fontSize: 9,
-                        fill: "var(--text-3)",
-                        fontFamily: "DM Mono",
-                      }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area
-                      type="monotone"
-                      dataKey="ec"
-                      stroke="var(--amber)"
-                      fill="url(#ecGrad)"
-                      strokeWidth={2}
-                      dot={false}
-                      name="EC"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-            </div>
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+          >
+            {[
+              {
+                title: "pH Over Time",
+                key: "ph",
+                stroke: "var(--green)",
+                gradId: "phGradA",
+                gradColor: "#4ade80",
+              },
+              {
+                title: "EC Concentration",
+                key: "ec",
+                stroke: "var(--amber)",
+                gradId: "ecGradA",
+                gradColor: "#f59e0b",
+              },
+            ].map(({ title, key, stroke, gradId, gradColor }) => (
+              <div
+                key={key}
+                style={{
+                  borderRadius: 12,
+                  padding: 20,
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                <SectionTitle sub={`${range.toUpperCase()} TRACE`}>
+                  {title}
+                </SectionTitle>
+                {buckets.length < 2 ? (
+                  <EmptyChart message="Not enough data for this range" />
+                ) : (
+                  <ResponsiveContainer width="100%" height={180}>
+                    <AreaChart data={buckets}>
+                      <defs>
+                        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                          <stop
+                            offset="0%"
+                            stopColor={gradColor}
+                            stopOpacity={0.3}
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor={gradColor}
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid
+                        stroke="var(--border)"
+                        strokeDasharray="3 3"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="label"
+                        tick={{
+                          fontSize: 9,
+                          fill: "var(--text-3)",
+                          fontFamily: "DM Mono",
+                        }}
+                        axisLine={false}
+                        tickLine={false}
+                        interval="preserveStartEnd"
+                      />
+                      <YAxis
+                        domain={["auto", "auto"]}
+                        tick={{
+                          fontSize: 9,
+                          fill: "var(--text-3)",
+                          fontFamily: "DM Mono",
+                        }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area
+                        type="monotone"
+                        dataKey={key}
+                        stroke={stroke}
+                        fill={`url(#${gradId})`}
+                        strokeWidth={2}
+                        dot={false}
+                        name={key.toUpperCase()}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            ))}
           </div>
 
           {/* Temp + Humidity */}
           <div
-            className="rounded-xl p-5"
             style={{
+              borderRadius: 12,
+              padding: 20,
               background: "var(--surface)",
               border: "1px solid var(--border)",
             }}
@@ -619,10 +511,7 @@ export default function Analytics() {
               Temperature & Humidity
             </SectionTitle>
             {buckets.length < 2 ? (
-              <EmptyChart
-                height={180}
-                message="Not enough data for this range"
-              />
+              <EmptyChart message="Not enough data for this range" />
             ) : (
               <ResponsiveContainer width="100%" height={180}>
                 <LineChart data={buckets}>
@@ -689,11 +578,14 @@ export default function Analytics() {
             )}
           </div>
 
-          {/* Activity bar + Radar */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Activity + Radar */}
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+          >
             <div
-              className="rounded-xl p-5"
               style={{
+                borderRadius: 12,
+                padding: 20,
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
               }}
@@ -744,8 +636,9 @@ export default function Analytics() {
             </div>
 
             <div
-              className="rounded-xl p-5"
               style={{
+                borderRadius: 12,
+                padding: 20,
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
               }}
@@ -786,38 +679,58 @@ export default function Analytics() {
             </div>
           </div>
 
-          {/* Crop breakdown table */}
+          {/* Crop summary table */}
           <div
-            className="rounded-xl overflow-hidden"
             style={{
+              borderRadius: 12,
+              overflow: "hidden",
               background: "var(--surface)",
               border: "1px solid var(--border)",
             }}
           >
             <div
-              className="p-5 border-b"
-              style={{ borderColor: "var(--border)" }}
+              style={{ padding: 20, borderBottom: "1px solid var(--border)" }}
             >
               <SectionTitle sub="PER CROP">Latest Sensor Summary</SectionTitle>
             </div>
             {loading ? (
-              <div className="p-8 flex justify-center">
+              <div
+                style={{
+                  padding: 32,
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
                 <span
-                  className="text-xs font-mono"
-                  style={{ color: "var(--text-3)" }}
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "DM Mono, monospace",
+                    color: "var(--text-3)",
+                  }}
                 >
                   Loading…
                 </span>
               </div>
             ) : dashboard.length === 0 ? (
               <div
-                className="p-8 text-center text-xs font-mono"
-                style={{ color: "var(--text-3)" }}
+                style={{
+                  padding: 32,
+                  textAlign: "center",
+                  fontSize: 11,
+                  fontFamily: "DM Mono, monospace",
+                  color: "var(--text-3)",
+                }}
               >
                 No crops in database
               </div>
             ) : (
-              <table className="w-full text-sm">
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: 12,
+                }}
+              >
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--border)" }}>
                     {[
@@ -831,8 +744,14 @@ export default function Analytics() {
                     ].map((h) => (
                       <th
                         key={h}
-                        className="px-5 py-3 text-left text-[10px] font-mono"
-                        style={{ color: "var(--text-3)" }}
+                        style={{
+                          padding: "10px 20px",
+                          textAlign: "left",
+                          fontSize: 10,
+                          fontFamily: "DM Mono, monospace",
+                          color: "var(--text-3)",
+                          fontWeight: 400,
+                        }}
                       >
                         {h}
                       </th>
@@ -849,44 +768,72 @@ export default function Analytics() {
                         style={{ borderBottom: "1px solid var(--border)" }}
                       >
                         <td
-                          className="px-5 py-3 font-mono text-xs"
-                          style={{ color: "var(--text)" }}
+                          style={{
+                            padding: "10px 20px",
+                            fontFamily: "DM Mono, monospace",
+                            fontSize: 11,
+                            color: "var(--text)",
+                          }}
                         >
                           {p.crop_id || "—"}
                         </td>
                         <td
-                          className="px-5 py-3 font-mono text-xs"
-                          style={{ color: "var(--text-2)" }}
+                          style={{
+                            padding: "10px 20px",
+                            fontFamily: "DM Mono, monospace",
+                            fontSize: 11,
+                            color: "var(--text-2)",
+                          }}
                         >
                           {p.crop || "—"}
                         </td>
                         <td
-                          className="px-5 py-3 font-mono text-xs"
-                          style={{ color: "var(--text-2)" }}
+                          style={{
+                            padding: "10px 20px",
+                            fontFamily: "DM Mono, monospace",
+                            fontSize: 11,
+                            color: "var(--text-2)",
+                          }}
                         >
                           {p.stage || "—"}
                         </td>
                         <td
-                          className="px-5 py-3 font-mono text-xs"
-                          style={{ color: "var(--green)" }}
+                          style={{
+                            padding: "10px 20px",
+                            fontFamily: "DM Mono, monospace",
+                            fontSize: 11,
+                            color: "var(--green)",
+                          }}
                         >
                           {s.ph}
                         </td>
                         <td
-                          className="px-5 py-3 font-mono text-xs"
-                          style={{ color: "var(--amber)" }}
+                          style={{
+                            padding: "10px 20px",
+                            fontFamily: "DM Mono, monospace",
+                            fontSize: 11,
+                            color: "var(--amber)",
+                          }}
                         >
                           {s.ec}
                         </td>
                         <td
-                          className="px-5 py-3 font-mono text-xs"
-                          style={{ color: "var(--blue)" }}
+                          style={{
+                            padding: "10px 20px",
+                            fontFamily: "DM Mono, monospace",
+                            fontSize: 11,
+                            color: "var(--blue)",
+                          }}
                         >
                           {s.temp}°C
                         </td>
                         <td
-                          className="px-5 py-3 font-mono text-xs"
-                          style={{ color: "var(--text-2)" }}
+                          style={{
+                            padding: "10px 20px",
+                            fontFamily: "DM Mono, monospace",
+                            fontSize: 11,
+                            color: "var(--text-2)",
+                          }}
                         >
                           {p.sequence_number || 1}
                         </td>
@@ -898,24 +845,30 @@ export default function Analytics() {
             )}
           </div>
 
-          {/* Agent activity derived from action_taken fields */}
+          {/* Agent activity */}
           {agentStats.length > 0 && (
             <div
-              className="rounded-xl overflow-hidden"
               style={{
+                borderRadius: 12,
+                overflow: "hidden",
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
               }}
             >
               <div
-                className="p-5 border-b"
-                style={{ borderColor: "var(--border)" }}
+                style={{ padding: 20, borderBottom: "1px solid var(--border)" }}
               >
                 <SectionTitle sub="DERIVED FROM STORED ACTIONS">
                   Agent Activity
                 </SectionTitle>
               </div>
-              <table className="w-full text-sm">
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: 12,
+                }}
+              >
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--border)" }}>
                     {[
@@ -926,8 +879,14 @@ export default function Analytics() {
                     ].map((h) => (
                       <th
                         key={h}
-                        className="px-5 py-3 text-left text-[10px] font-mono"
-                        style={{ color: "var(--text-3)" }}
+                        style={{
+                          padding: "10px 20px",
+                          textAlign: "left",
+                          fontSize: 10,
+                          fontFamily: "DM Mono, monospace",
+                          color: "var(--text-3)",
+                          fontWeight: 400,
+                        }}
                       >
                         {h}
                       </th>
@@ -941,26 +900,45 @@ export default function Analytics() {
                       style={{ borderBottom: "1px solid var(--border)" }}
                     >
                       <td
-                        className="px-5 py-3 font-mono text-xs"
-                        style={{ color: "var(--text)" }}
+                        style={{
+                          padding: "10px 20px",
+                          fontFamily: "DM Mono, monospace",
+                          fontSize: 11,
+                          color: "var(--text)",
+                        }}
                       >
                         {name}
                       </td>
                       <td
-                        className="px-5 py-3 font-mono text-xs"
-                        style={{ color: "var(--text-2)" }}
+                        style={{
+                          padding: "10px 20px",
+                          fontFamily: "DM Mono, monospace",
+                          fontSize: 11,
+                          color: "var(--text-2)",
+                        }}
                       >
                         {decisions}
                       </td>
-                      <td className="px-5 py-3">
-                        <div className="flex items-center gap-2">
+                      <td style={{ padding: "10px 20px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
                           <div
-                            className="h-1.5 w-24 rounded-full"
-                            style={{ background: "var(--border)" }}
+                            style={{
+                              height: 6,
+                              width: 96,
+                              borderRadius: 3,
+                              background: "var(--border)",
+                            }}
                           >
                             <div
-                              className="h-full rounded-full"
                               style={{
+                                height: "100%",
+                                borderRadius: 3,
                                 width: `${accuracy}%`,
                                 background:
                                   accuracy > 80
@@ -972,17 +950,23 @@ export default function Analytics() {
                             />
                           </div>
                           <span
-                            className="font-mono text-xs"
-                            style={{ color: "var(--text-2)" }}
+                            style={{
+                              fontFamily: "DM Mono, monospace",
+                              fontSize: 11,
+                              color: "var(--text-2)",
+                            }}
                           >
                             {accuracy}%
                           </span>
                         </div>
                       </td>
-                      <td className="px-5 py-3">
+                      <td style={{ padding: "10px 20px" }}>
                         <span
-                          className="text-[10px] font-mono px-2 py-0.5 rounded-full"
                           style={{
+                            fontSize: 10,
+                            fontFamily: "DM Mono, monospace",
+                            padding: "3px 8px",
+                            borderRadius: 20,
                             background: "rgba(74,222,128,0.1)",
                             color: "var(--green)",
                             border: "1px solid rgba(74,222,128,0.2)",

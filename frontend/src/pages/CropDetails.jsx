@@ -8,7 +8,6 @@ import {
   Wind,
   Zap,
   Activity,
-  Clock,
 } from "lucide-react";
 import {
   AreaChart,
@@ -33,8 +32,11 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div
-      className="px-3 py-2 rounded-lg text-xs font-mono"
       style={{
+        padding: "8px 12px",
+        borderRadius: 8,
+        fontSize: 11,
+        fontFamily: "DM Mono, monospace",
         background: "var(--surface-2)",
         border: "1px solid var(--border)",
         color: "var(--text)",
@@ -53,31 +55,63 @@ const CustomTooltip = ({ active, payload, label }) => {
 function StatBox({ icon: Icon, label, value, color, unit }) {
   return (
     <div
-      className="rounded-xl p-4"
+      className="card-hover"
       style={{
+        borderRadius: 12,
+        padding: 16,
         background: "var(--surface)",
         border: "1px solid var(--border)",
       }}
     >
-      <div className="flex items-center gap-2 mb-3">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 10,
+        }}
+      >
         <div
-          className="w-7 h-7 rounded-lg flex items-center justify-center"
-          style={{ background: `${color}15`, border: `1px solid ${color}30` }}
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 8,
+            background: `${color}15`,
+            border: `1px solid ${color}30`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
           <Icon size={13} style={{ color }} />
         </div>
         <span
-          className="text-[10px] font-mono uppercase"
-          style={{ color: "var(--text-3)" }}
+          style={{
+            fontSize: 10,
+            fontFamily: "DM Mono, monospace",
+            textTransform: "uppercase",
+            color: "var(--text-3)",
+          }}
         >
           {label}
         </span>
       </div>
-      <div className="text-2xl font-bold font-mono" style={{ color }}>
+      <div
+        style={{
+          fontSize: 22,
+          fontWeight: 700,
+          fontFamily: "DM Mono, monospace",
+          color,
+        }}
+      >
         {value}
         <span
-          className="text-sm font-normal ml-0.5"
-          style={{ color: "var(--text-3)" }}
+          style={{
+            fontSize: 13,
+            fontWeight: 400,
+            marginLeft: 2,
+            color: "var(--text-3)",
+          }}
         >
           {unit}
         </span>
@@ -85,6 +119,16 @@ function StatBox({ icon: Icon, label, value, color, unit }) {
     </div>
   );
 }
+
+// Severity dot for logs
+function logDotColor(payload) {
+  const outcome = (payload?.outcome || "").toLowerCase();
+  if (/fail|critical|disease|error/.test(outcome)) return "var(--red)";
+  if (/deteriorat|negative|attention/.test(outcome)) return "var(--amber)";
+  return "var(--green)";
+}
+
+const TABS = ["overview", "sensors", "log"];
 
 export default function CropDetails() {
   const { cropId } = useParams();
@@ -102,14 +146,11 @@ export default function CropDetails() {
             (a.payload?.sequence_number || 0) -
             (b.payload?.sequence_number || 0),
         );
-        const processed = sorted.map((item) => {
-          const p = item.payload || {};
-          return {
-            ...item,
-            cleanSensors: extractSensors(p),
-            parsedAction: parsePythonString(p.action_taken),
-          };
-        });
+        const processed = sorted.map((item) => ({
+          ...item,
+          cleanSensors: extractSensors(item.payload || {}),
+          parsedAction: parsePythonString((item.payload || {}).action_taken),
+        }));
         setHistory(processed);
         setLatest(processed[processed.length - 1]);
       }
@@ -119,22 +160,46 @@ export default function CropDetails() {
 
   if (loading)
     return (
-      <div className="flex h-screen" style={{ background: "var(--bg)" }}>
+      <div
+        style={{ display: "flex", height: "100vh", background: "var(--bg)" }}
+      >
         <Sidebar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-xs font-mono" style={{ color: "var(--text-3)" }}>
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              fontFamily: "DM Mono, monospace",
+              color: "var(--text-3)",
+            }}
+          >
             Loading crop data…
-          </div>
+          </span>
         </div>
       </div>
     );
 
   if (!latest)
     return (
-      <div className="flex h-screen" style={{ background: "var(--bg)" }}>
+      <div
+        style={{ display: "flex", height: "100vh", background: "var(--bg)" }}
+      >
         <Sidebar />
-        <div className="flex-1 flex items-center justify-center">
-          <div style={{ color: "var(--text-3)" }}>Crop not found</div>
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <span style={{ color: "var(--text-3)" }}>Crop not found</span>
         </div>
       </div>
     );
@@ -155,77 +220,127 @@ export default function CropDetails() {
     humidity: formatNumber(h.cleanSensors?.humidity),
   }));
 
-  const TABS = ["overview", "sensors", "log"];
-
   return (
     <div
-      className="flex h-screen overflow-hidden"
-      style={{ background: "var(--bg)" }}
+      style={{
+        display: "flex",
+        height: "100vh",
+        overflow: "hidden",
+        background: "var(--bg)",
+      }}
     >
       <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden">
+
+      <main
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         {/* Header */}
         <header
-          className="flex-shrink-0 px-6 py-4 border-b flex items-center gap-4"
-          style={{ borderColor: "var(--border)", background: "var(--bg-2)" }}
+          style={{
+            flexShrink: 0,
+            padding: "0 24px",
+            height: 64,
+            borderBottom: "1px solid var(--border)",
+            background: "var(--bg-2)",
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+          }}
         >
           <button
             onClick={() => navigate("/dashboard")}
-            className="p-2 rounded-lg transition-colors"
             style={{
+              width: 34,
+              height: 34,
+              borderRadius: 8,
               background: "var(--surface)",
               border: "1px solid var(--border)",
               color: "var(--text-3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
             }}
           >
             <ArrowLeft size={15} />
           </button>
+
           <div>
             <h1
-              className="font-bold text-base"
-              style={{ color: "var(--text)" }}
+              style={{
+                fontWeight: 700,
+                fontSize: 15,
+                color: "var(--text)",
+                margin: 0,
+              }}
             >
               {p.crop || "Unknown"}{" "}
-              <span style={{ color: "var(--text-3)" }}>
+              <span style={{ color: "var(--text-3)", fontWeight: 400 }}>
                 #{p.sequence_number || 0}
               </span>
             </h1>
             <p
-              className="text-[11px] font-mono"
-              style={{ color: "var(--text-3)" }}
+              style={{
+                fontSize: 11,
+                fontFamily: "DM Mono, monospace",
+                color: "var(--text-3)",
+                margin: 0,
+              }}
             >
               {cropId} · {p.stage}
             </p>
           </div>
 
-          {/* Status */}
+          {/* Live badge */}
           <div
-            className="flex items-center gap-1.5 ml-4 px-3 py-1.5 rounded-full text-[11px] font-mono"
             style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "4px 10px",
+              borderRadius: 20,
               background: "rgba(74,222,128,0.1)",
               border: "1px solid rgba(74,222,128,0.25)",
+              fontSize: 11,
+              fontFamily: "DM Mono, monospace",
               color: "var(--green)",
             }}
           >
             <span
-              className="status-dot w-1.5 h-1.5 rounded-full"
-              style={{ background: "var(--green)" }}
-            />{" "}
+              className="status-dot"
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: "var(--green)",
+              }}
+            />
             LIVE
           </div>
 
           {/* Tabs */}
-          <div className="ml-auto flex items-center gap-1">
+          <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
             {TABS.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className="px-3 py-1.5 rounded-lg text-[11px] font-mono capitalize transition-all"
                 style={{
+                  padding: "5px 12px",
+                  borderRadius: 8,
+                  fontSize: 11,
+                  fontFamily: "DM Mono, monospace",
+                  textTransform: "capitalize",
+                  cursor: "pointer",
                   background:
                     activeTab === tab ? "var(--surface-2)" : "transparent",
                   color: activeTab === tab ? "var(--text)" : "var(--text-3)",
                   border: `1px solid ${activeTab === tab ? "var(--border-bright)" : "transparent"}`,
+                  transition: "all 0.15s",
                 }}
               >
                 {tab}
@@ -234,11 +349,27 @@ export default function CropDetails() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* Content */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: 24,
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+          }}
+        >
+          {/* OVERVIEW */}
           {activeTab === "overview" && (
             <>
-              {/* Stat grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, 1fr)",
+                  gap: 12,
+                }}
+              >
                 <StatBox
                   icon={Thermometer}
                   label="Temperature"
@@ -269,24 +400,29 @@ export default function CropDetails() {
                 />
               </div>
 
-              {/* Main chart */}
+              {/* pH chart */}
               <div
-                className="rounded-xl p-5"
                 style={{
+                  borderRadius: 12,
+                  padding: 20,
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                 }}
               >
                 <div
-                  className="text-[10px] font-mono mb-4"
-                  style={{ color: "var(--text-3)" }}
+                  style={{
+                    fontSize: 10,
+                    fontFamily: "DM Mono, monospace",
+                    color: "var(--text-3)",
+                    marginBottom: 16,
+                  }}
                 >
                   // HISTORICAL pH TRACE
                 </div>
                 <ResponsiveContainer width="100%" height={200}>
                   <AreaChart data={chartData}>
                     <defs>
-                      <linearGradient id="phGrad2" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="phGradCD" x1="0" y1="0" x2="0" y2="1">
                         <stop
                           offset="0%"
                           stopColor="#4ade80"
@@ -329,7 +465,7 @@ export default function CropDetails() {
                       type="monotone"
                       dataKey="ph"
                       stroke="var(--green)"
-                      fill="url(#phGrad2)"
+                      fill="url(#phGradCD)"
                       strokeWidth={2}
                       dot={false}
                       name="pH"
@@ -338,33 +474,49 @@ export default function CropDetails() {
                 </ResponsiveContainer>
               </div>
 
-              {/* AI Analysis */}
+              {/* AI analysis */}
               <div
-                className="rounded-xl p-5"
                 style={{
+                  borderRadius: 12,
+                  padding: 20,
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                 }}
               >
                 <div
-                  className="text-[10px] font-mono mb-3"
-                  style={{ color: "var(--text-3)" }}
+                  style={{
+                    fontSize: 10,
+                    fontFamily: "DM Mono, monospace",
+                    color: "var(--text-3)",
+                    marginBottom: 12,
+                  }}
                 >
                   // LATEST AI ANALYSIS
                 </div>
-                <div className="flex items-start gap-3">
+                <div
+                  style={{ display: "flex", alignItems: "flex-start", gap: 12 }}
+                >
                   <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
                       background: "rgba(74,222,128,0.1)",
                       border: "1px solid rgba(74,222,128,0.2)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
                     }}
                   >
                     <Zap size={14} style={{ color: "var(--green)" }} />
                   </div>
                   <div
-                    className="text-sm leading-relaxed"
-                    style={{ color: "var(--text-2)" }}
+                    style={{
+                      fontSize: 13,
+                      lineHeight: 1.6,
+                      color: "var(--text-2)",
+                    }}
                   >
                     {formatOutcome(p.outcome) ||
                       "System monitoring active. No anomalies detected."}
@@ -372,34 +524,43 @@ export default function CropDetails() {
                 </div>
                 {p.action_taken && p.action_taken !== "PENDING_ACTION" && (
                   <div
-                    className="mt-3 p-3 rounded-lg font-mono text-xs"
                     style={{
+                      marginTop: 12,
+                      padding: 10,
+                      borderRadius: 8,
+                      fontFamily: "DM Mono, monospace",
+                      fontSize: 11,
                       background: "var(--bg-3)",
                       border: "1px solid var(--border)",
                       color: "var(--text-3)",
                     }}
                   >
                     <span style={{ color: "var(--green)" }}>ACTION: </span>
-                    {p.action_taken?.substring(0, 200)}...
+                    {p.action_taken?.substring(0, 200)}…
                   </div>
                 )}
               </div>
             </>
           )}
 
+          {/* SENSORS */}
           {activeTab === "sensors" && (
-            <div className="space-y-6">
-              {/* Temp + Humidity */}
+            <>
               <div
-                className="rounded-xl p-5"
                 style={{
+                  borderRadius: 12,
+                  padding: 20,
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                 }}
               >
                 <div
-                  className="text-[10px] font-mono mb-4"
-                  style={{ color: "var(--text-3)" }}
+                  style={{
+                    fontSize: 10,
+                    fontFamily: "DM Mono, monospace",
+                    color: "var(--text-3)",
+                    marginBottom: 16,
+                  }}
                 >
                   // TEMP & HUMIDITY
                 </div>
@@ -450,24 +611,28 @@ export default function CropDetails() {
                 </ResponsiveContainer>
               </div>
 
-              {/* EC */}
               <div
-                className="rounded-xl p-5"
                 style={{
+                  borderRadius: 12,
+                  padding: 20,
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                 }}
               >
                 <div
-                  className="text-[10px] font-mono mb-4"
-                  style={{ color: "var(--text-3)" }}
+                  style={{
+                    fontSize: 10,
+                    fontFamily: "DM Mono, monospace",
+                    color: "var(--text-3)",
+                    marginBottom: 16,
+                  }}
                 >
                   // EC CONCENTRATION
                 </div>
                 <ResponsiveContainer width="100%" height={180}>
                   <AreaChart data={chartData}>
                     <defs>
-                      <linearGradient id="ecGrad2" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="ecGradCD" x1="0" y1="0" x2="0" y2="1">
                         <stop
                           offset="0%"
                           stopColor="#f59e0b"
@@ -509,7 +674,7 @@ export default function CropDetails() {
                       type="monotone"
                       dataKey="ec"
                       stroke="var(--amber)"
-                      fill="url(#ecGrad2)"
+                      fill="url(#ecGradCD)"
                       strokeWidth={2}
                       dot={false}
                       name="EC dS/m"
@@ -517,82 +682,137 @@ export default function CropDetails() {
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-            </div>
+            </>
           )}
 
+          {/* LOG */}
           {activeTab === "log" && (
             <div
-              className="rounded-xl overflow-hidden"
               style={{
+                borderRadius: 12,
+                overflow: "hidden",
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
               }}
             >
+              {/* Header row */}
               <div
-                className="p-4 border-b"
-                style={{ borderColor: "var(--border)" }}
+                style={{
+                  padding: "12px 20px",
+                  borderBottom: "1px solid var(--border)",
+                }}
               >
                 <div
-                  className="text-[10px] font-mono"
-                  style={{ color: "var(--text-3)" }}
+                  style={{
+                    fontSize: 10,
+                    fontFamily: "DM Mono, monospace",
+                    color: "var(--text-3)",
+                  }}
                 >
                   // EVENT LOG — {history.length} ENTRIES
                 </div>
               </div>
-              <div
-                className="divide-y"
-                style={{ borderColor: "var(--border)" }}
-              >
+
+              {/* Log rows */}
+              <div>
                 {[...history]
                   .reverse()
                   .slice(0, 20)
                   .map((h, i) => (
                     <div
                       key={i}
-                      className="flex gap-4 px-5 py-3 hover:bg-opacity-50 transition-colors"
                       style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "10px 20px",
                         background:
                           i % 2 === 0
                             ? "transparent"
-                            : "rgba(255,255,255,0.01)",
+                            : "rgba(255,255,255,0.015)",
+                        transition: "background 0.15s",
                       }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background =
+                          "rgba(74,222,128,0.04)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background =
+                          i % 2 === 0
+                            ? "transparent"
+                            : "rgba(255,255,255,0.015)")
+                      }
                     >
-                      <div
-                        className="flex items-center gap-1 text-[10px] font-mono flex-shrink-0 w-16"
-                        style={{ color: "var(--text-3)" }}
+                      {/* Severity dot */}
+                      <span
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: "50%",
+                          background: logDotColor(h.payload),
+                          flexShrink: 0,
+                        }}
+                      />
+
+                      {/* Timestamp */}
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontFamily: "DM Mono, monospace",
+                          color: "var(--text-3)",
+                          flexShrink: 0,
+                          width: 50,
+                        }}
                       >
-                        <Clock size={9} />
                         {h.payload?.timestamp
                           ? new Date(h.payload.timestamp).toLocaleTimeString(
                               [],
                               { hour: "2-digit", minute: "2-digit" },
                             )
                           : "--"}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div
-                          className="text-xs font-mono"
-                          style={{ color: "var(--text-2)" }}
-                        >
-                          pH {formatNumber(h.cleanSensors?.ph)} ·{" "}
-                          {formatNumber(h.cleanSensors?.temp)}°C · EC{" "}
-                          {formatNumber(h.cleanSensors?.ec)}
-                        </div>
-                        <div
-                          className="text-[11px] mt-0.5 truncate"
-                          style={{ color: "var(--text-3)" }}
-                        >
-                          {formatOutcome(h.payload?.outcome) ||
-                            h.payload?.action_taken ||
-                            "Routine check"}
-                        </div>
-                      </div>
-                      <div
-                        className="text-[10px] font-mono flex-shrink-0"
-                        style={{ color: "var(--text-3)" }}
+                      </span>
+
+                      {/* Seq # */}
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontFamily: "DM Mono, monospace",
+                          color: "var(--text-3)",
+                          width: 34,
+                          flexShrink: 0,
+                        }}
                       >
                         #{h.payload?.sequence_number || i}
-                      </div>
+                      </span>
+
+                      {/* Sensor snapshot */}
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontFamily: "DM Mono, monospace",
+                          color: "var(--text-2)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        pH {formatNumber(h.cleanSensors?.ph)} ·{" "}
+                        {formatNumber(h.cleanSensors?.temp)}°C · EC{" "}
+                        {formatNumber(h.cleanSensors?.ec)}
+                      </span>
+
+                      {/* Outcome / action */}
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: "var(--text-3)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formatOutcome(h.payload?.outcome) ||
+                          h.payload?.action_taken ||
+                          "Routine check"}
+                      </span>
                     </div>
                   ))}
               </div>

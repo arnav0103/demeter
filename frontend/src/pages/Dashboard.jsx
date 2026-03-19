@@ -50,18 +50,28 @@ function CropCard({ data, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="rounded-2xl overflow-hidden cursor-pointer card-hover"
+      className="card-hover"
       style={{
+        borderRadius: 16,
+        overflow: "hidden",
+        cursor: "pointer",
         background: "var(--surface)",
         border: "1px solid var(--border)",
       }}
     >
-      {/* Image / Gradient header */}
+      {/* Image header */}
       <div
-        className="relative h-36 overflow-hidden"
-        style={{ background: "var(--bg-3)" }}
+        style={{ position: "relative", height: 136, background: "var(--bg-3)" }}
       >
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <Leaf
             size={40}
             style={{ color: "var(--border-bright)", opacity: 0.4 }}
@@ -71,24 +81,39 @@ function CropCard({ data, onClick }) {
           <img
             src={data.image}
             alt={data.name}
-            className="absolute inset-0 w-full h-full object-cover opacity-70"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 0.7,
+            }}
             onError={(e) => {
               e.target.style.display = "none";
             }}
           />
         )}
-        {/* Overlay */}
+        {/* Bottom fade */}
         <div
-          className="absolute inset-0"
           style={{
+            position: "absolute",
+            inset: 0,
             background:
               "linear-gradient(to top, var(--surface) 0%, transparent 60%)",
           }}
         />
+
         {/* Status badge */}
         <div
-          className="absolute top-3 right-3 text-[10px] font-mono px-2 py-1 rounded-full"
           style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            fontSize: 10,
+            fontFamily: "DM Mono, monospace",
+            padding: "3px 8px",
+            borderRadius: 20,
             background: st.bg,
             color: st.text,
             border: `1px solid ${st.border}`,
@@ -101,24 +126,44 @@ function CropCard({ data, onClick }) {
               : "◆ "}
           {data.status.toUpperCase()}
         </div>
-        {/* Seq number */}
+        {/* Seq badge */}
         <div
-          className="absolute top-3 left-3 text-[10px] font-mono px-2 py-0.5 rounded"
-          style={{ background: "rgba(0,0,0,0.5)", color: "var(--text-3)" }}
+          style={{
+            position: "absolute",
+            top: 10,
+            left: 10,
+            fontSize: 10,
+            fontFamily: "DM Mono, monospace",
+            padding: "2px 6px",
+            borderRadius: 4,
+            background: "rgba(0,0,0,0.5)",
+            color: "var(--text-3)",
+          }}
         >
           #{data.seq || 1}
         </div>
       </div>
 
-      <div className="p-4 space-y-3">
-        {/* Name + stage */}
+      <div
+        style={{
+          padding: 14,
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+        }}
+      >
+        {/* Name */}
         <div>
-          <div className="font-bold text-sm" style={{ color: "var(--text)" }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text)" }}>
             {data.name}
           </div>
           <div
-            className="text-[11px] mt-0.5 font-mono"
-            style={{ color: "var(--text-3)" }}
+            style={{
+              fontSize: 10,
+              marginTop: 2,
+              fontFamily: "DM Mono, monospace",
+              color: "var(--text-3)",
+            }}
           >
             {data.cropId} · {data.statusMsg}
           </div>
@@ -127,20 +172,27 @@ function CropCard({ data, onClick }) {
         {/* Maturity bar */}
         <div>
           <div
-            className="flex justify-between text-[10px] font-mono mb-1"
-            style={{ color: "var(--text-3)" }}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 10,
+              fontFamily: "DM Mono, monospace",
+              color: "var(--text-3)",
+              marginBottom: 4,
+            }}
           >
             <span>Maturity</span>
             <span style={{ color: "var(--green)" }}>{maturity}%</span>
           </div>
           <div
-            className="h-1 rounded-full"
-            style={{ background: "var(--border)" }}
+            style={{ height: 3, borderRadius: 2, background: "var(--border)" }}
           >
             <div
-              className="h-full rounded-full progress-fill"
+              className="progress-fill"
               style={{
                 width: `${maturity}%`,
+                height: "100%",
+                borderRadius: 2,
                 background:
                   maturity > 70
                     ? "var(--green)"
@@ -152,22 +204,30 @@ function CropCard({ data, onClick }) {
           </div>
         </div>
 
-        {/* Sensor row */}
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <div className="flex items-center gap-1.5">
+        {/* Sensor pair */}
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <Thermometer size={12} style={{ color: "var(--text-3)" }} />
             <span
-              className="text-xs font-mono"
-              style={{ color: "var(--text-2)" }}
+              style={{
+                fontSize: 11,
+                fontFamily: "DM Mono, monospace",
+                color: "var(--text-2)",
+              }}
             >
               {data.sensors.temp}°C
             </span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <Droplet size={12} style={{ color: "var(--text-3)" }} />
             <span
-              className="text-xs font-mono"
-              style={{ color: "var(--text-2)" }}
+              style={{
+                fontSize: 11,
+                fontFamily: "DM Mono, monospace",
+                color: "var(--text-2)",
+              }}
             >
               pH {data.sensors.ph}
             </span>
@@ -176,12 +236,22 @@ function CropCard({ data, onClick }) {
 
         {/* Footer */}
         <div
-          className="flex items-center justify-between pt-1 border-t"
-          style={{ borderColor: "var(--border)" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingTop: 8,
+            borderTop: "1px solid var(--border)",
+          }}
         >
           <div
-            className="flex items-center gap-1 text-[10px]"
-            style={{ color: "var(--text-3)" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: 10,
+              color: "var(--text-3)",
+            }}
           >
             <Clock size={10} />
             {data.daysLeft > 0 ? `${data.daysLeft}d left` : "Ready"}
@@ -202,6 +272,18 @@ export default function Dashboard() {
   const [filterCrop, setFilterCrop] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
+
+  const getImg = (name) => {
+    if (!name) return null;
+    const n = name.toLowerCase();
+    if (n.includes("tomato"))
+      return "https://images.unsplash.com/photo-1591857177580-dc82b9e4e5c9?q=80&w=400";
+    if (n.includes("basil"))
+      return "https://images.unsplash.com/photo-1618164436241-4473940d1f5c?q=80&w=400";
+    if (n.includes("spinach"))
+      return "https://images.unsplash.com/photo-1576045057995-568f588f82fb?q=80&w=400";
+    return "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?q=80&w=400";
+  };
 
   useEffect(() => {
     if (dashboard) {
@@ -228,34 +310,24 @@ export default function Dashboard() {
     }
   }, [dashboard]);
 
-  const getImg = (name) => {
-    if (!name) return null;
-    const n = name.toLowerCase();
-    if (n.includes("tomato"))
-      return "https://images.unsplash.com/photo-1591857177580-dc82b9e4e5c9?q=80&w=400";
-    if (n.includes("basil"))
-      return "https://images.unsplash.com/photo-1618164436241-4473940d1f5c?q=80&w=400";
-    if (n.includes("spinach"))
-      return "https://images.unsplash.com/photo-1576045057995-568f588f82fb?q=80&w=400";
-    return "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?q=80&w=400";
-  };
-
-  const filtered = useMemo(() => {
-    return crops.filter((c) => {
-      const q = search.toLowerCase();
-      if (
-        q &&
-        !c.name.toLowerCase().includes(q) &&
-        !c.cropId.toLowerCase().includes(q) &&
-        !c.statusMsg.toLowerCase().includes(q)
-      )
-        return false;
-      if (filterStage !== "All" && c.stage !== filterStage) return false;
-      if (filterCrop !== "All" && c.rawCrop !== filterCrop) return false;
-      if (filterStatus !== "All" && c.status !== filterStatus) return false;
-      return true;
-    });
-  }, [crops, search, filterStage, filterCrop, filterStatus]);
+  const filtered = useMemo(
+    () =>
+      crops.filter((c) => {
+        const q = search.toLowerCase();
+        if (
+          q &&
+          !c.name.toLowerCase().includes(q) &&
+          !c.cropId.toLowerCase().includes(q) &&
+          !c.statusMsg.toLowerCase().includes(q)
+        )
+          return false;
+        if (filterStage !== "All" && c.stage !== filterStage) return false;
+        if (filterCrop !== "All" && c.rawCrop !== filterCrop) return false;
+        if (filterStatus !== "All" && c.status !== filterStatus) return false;
+        return true;
+      }),
+    [crops, search, filterStage, filterCrop, filterStatus],
+  );
 
   const activeFilters = [filterStage, filterCrop, filterStatus].filter(
     (f) => f !== "All",
@@ -273,28 +345,68 @@ export default function Dashboard() {
 
   return (
     <div
-      className="flex h-screen overflow-hidden"
-      style={{ background: "var(--bg)" }}
+      style={{
+        display: "flex",
+        height: "100vh",
+        overflow: "hidden",
+        background: "var(--bg)",
+      }}
     >
       <Sidebar />
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
+      <main
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        {/* ── Header — 64px, border aligns with sidebar ── */}
         <header
-          className="flex-shrink-0 px-6 py-4 border-b flex items-center gap-4"
-          style={{ borderColor: "var(--border)", background: "var(--bg-2)" }}
+          style={{
+            flexShrink: 0,
+            padding: "0 24px",
+            height: 64,
+            borderBottom: "1px solid var(--border)",
+            background: "var(--bg-2)",
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+          }}
         >
           <div>
-            <h1 className="font-bold text-lg" style={{ color: "var(--text)" }}>
+            <h1
+              style={{
+                fontWeight: 700,
+                fontSize: 18,
+                color: "var(--text)",
+                margin: 0,
+              }}
+            >
               Crops Overview
             </h1>
-            <p className="text-xs font-mono" style={{ color: "var(--text-3)" }}>
+            <p
+              style={{
+                fontSize: 11,
+                fontFamily: "DM Mono, monospace",
+                color: "var(--text-3)",
+                margin: 0,
+              }}
+            >
               {filtered.length} of {crops.length} crops shown
             </p>
           </div>
 
           {/* Summary chips */}
-          <div className="hidden md:flex items-center gap-2 ml-4">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginLeft: 16,
+            }}
+          >
             {[
               {
                 label: "Healthy",
@@ -314,10 +426,16 @@ export default function Dashboard() {
             ].map(({ label, count, color }) => (
               <div
                 key={label}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono"
                 style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "3px 10px",
+                  borderRadius: 20,
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
+                  fontSize: 11,
+                  fontFamily: "DM Mono, monospace",
                   color,
                 }}
               >
@@ -327,51 +445,86 @@ export default function Dashboard() {
             ))}
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={refreshData}
-              className="p-2 rounded-lg transition-colors"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text-3)",
-              }}
-            >
-              <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-            </button>
-          </div>
+          <button
+            onClick={refreshData}
+            style={{
+              marginLeft: "auto",
+              width: 34,
+              height: 34,
+              borderRadius: 8,
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              color: "var(--text-3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+            }}
+          >
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+          </button>
         </header>
 
         {/* Search + Filter bar */}
         <div
-          className="flex-shrink-0 px-6 py-3 border-b flex items-center gap-3"
-          style={{ borderColor: "var(--border)", background: "var(--bg-2)" }}
+          style={{
+            flexShrink: 0,
+            padding: "8px 24px",
+            borderBottom: "1px solid var(--border)",
+            background: "var(--bg-2)",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+          }}
         >
           {/* Search */}
-          <div className="relative flex-1 max-w-md">
+          <div style={{ position: "relative", flex: 1, maxWidth: 360 }}>
             <Search
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2"
-              style={{ color: "var(--text-3)" }}
+              style={{
+                position: "absolute",
+                left: 10,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "var(--text-3)",
+              }}
             />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search crops, IDs, stages…"
-              className="w-full pl-9 pr-4 py-2 rounded-lg text-sm font-mono outline-none transition-all"
               style={{
+                width: "100%",
+                paddingLeft: 32,
+                paddingRight: search ? 28 : 12,
+                paddingTop: 7,
+                paddingBottom: 7,
+                borderRadius: 8,
+                fontSize: 12,
+                fontFamily: "DM Mono, monospace",
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
                 color: "var(--text)",
+                outline: "none",
                 caretColor: "var(--green)",
               }}
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
+                style={{
+                  position: "absolute",
+                  right: 8,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  color: "var(--text-3)",
+                }}
               >
-                <X size={12} style={{ color: "var(--text-3)" }} />
+                <X size={12} />
               </button>
             )}
           </div>
@@ -379,40 +532,59 @@ export default function Dashboard() {
           {/* Filter toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all"
             style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "7px 12px",
+              borderRadius: 8,
+              fontSize: 12,
+              cursor: "pointer",
               background: showFilters
                 ? "rgba(74,222,128,0.1)"
                 : "var(--surface)",
               border: `1px solid ${showFilters ? "rgba(74,222,128,0.3)" : "var(--border)"}`,
               color: showFilters ? "var(--green)" : "var(--text-2)",
+              transition: "all 0.15s",
             }}
           >
-            <SlidersHorizontal size={14} /> Filters
+            <SlidersHorizontal size={13} />
+            Filters
             {activeFilters > 0 && (
               <span
-                className="px-1.5 py-0.5 rounded text-[10px] font-mono"
-                style={{ background: "var(--green)", color: "#0c1a0e" }}
+                style={{
+                  padding: "0 5px",
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontFamily: "DM Mono, monospace",
+                  background: "var(--green)",
+                  color: "#0c1a0e",
+                }}
               >
                 {activeFilters}
               </span>
             )}
           </button>
 
-          {/* Quick category pills */}
-          <div className="hidden lg:flex items-center gap-2">
+          {/* Quick stage pills */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {STAGES.slice(0, 4).map((s) => (
               <button
                 key={s}
                 onClick={() => setFilterStage(filterStage === s ? "All" : s)}
-                className="px-3 py-1.5 rounded-full text-[11px] font-mono transition-all"
                 style={{
+                  padding: "5px 12px",
+                  borderRadius: 20,
+                  fontSize: 11,
+                  fontFamily: "DM Mono, monospace",
+                  cursor: "pointer",
                   background:
                     filterStage === s
                       ? "rgba(74,222,128,0.15)"
                       : "var(--surface)",
                   border: `1px solid ${filterStage === s ? "rgba(74,222,128,0.4)" : "var(--border)"}`,
                   color: filterStage === s ? "var(--green)" : "var(--text-3)",
+                  transition: "all 0.15s",
                 }}
               >
                 {s}
@@ -424,8 +596,16 @@ export default function Dashboard() {
         {/* Expanded filters */}
         {showFilters && (
           <div
-            className="flex-shrink-0 px-6 py-3 border-b flex items-center gap-6 animate-fade-in"
-            style={{ borderColor: "var(--border)", background: "var(--bg-3)" }}
+            className="animate-fade-in"
+            style={{
+              flexShrink: 0,
+              padding: "8px 24px",
+              borderBottom: "1px solid var(--border)",
+              background: "var(--bg-3)",
+              display: "flex",
+              alignItems: "center",
+              gap: 24,
+            }}
           >
             {[
               {
@@ -447,22 +627,34 @@ export default function Dashboard() {
                 opts: STATUSES,
               },
             ].map(({ label, value, set, opts }) => (
-              <div key={label} className="flex items-center gap-2">
+              <div
+                key={label}
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
+              >
                 <span
-                  className="text-[11px] font-mono"
-                  style={{ color: "var(--text-3)" }}
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "DM Mono, monospace",
+                    color: "var(--text-3)",
+                  }}
                 >
                   {label}
                 </span>
-                <div className="relative">
+                <div style={{ position: "relative" }}>
                   <select
                     value={value}
                     onChange={(e) => set(e.target.value)}
-                    className="appearance-none pl-3 pr-7 py-1.5 rounded-lg text-xs font-mono outline-none cursor-pointer"
                     style={{
+                      appearance: "none",
+                      padding: "5px 24px 5px 10px",
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontFamily: "DM Mono, monospace",
                       background: "var(--surface)",
                       border: "1px solid var(--border)",
                       color: "var(--text-2)",
+                      cursor: "pointer",
+                      outline: "none",
                     }}
                   >
                     {opts.map((o) => (
@@ -473,8 +665,14 @@ export default function Dashboard() {
                   </select>
                   <ChevronDown
                     size={10}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
-                    style={{ color: "var(--text-3)" }}
+                    style={{
+                      position: "absolute",
+                      right: 8,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      pointerEvents: "none",
+                      color: "var(--text-3)",
+                    }}
                   />
                 </div>
               </div>
@@ -486,8 +684,15 @@ export default function Dashboard() {
                 setFilterStatus("All");
                 setSearch("");
               }}
-              className="ml-auto text-[11px] font-mono transition-colors"
-              style={{ color: "var(--text-3)" }}
+              style={{
+                marginLeft: "auto",
+                fontSize: 11,
+                fontFamily: "DM Mono, monospace",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--text-3)",
+              }}
             >
               Clear all
             </button>
@@ -495,21 +700,37 @@ export default function Dashboard() {
         )}
 
         {/* Crop grid */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                gap: 16,
+              }}
+            >
               {Array(8)
                 .fill(0)
                 .map((_, i) => (
                   <div
                     key={i}
-                    className="h-64 rounded-2xl shimmer"
-                    style={{ border: "1px solid var(--border)" }}
+                    className="shimmer"
+                    style={{
+                      height: 260,
+                      borderRadius: 16,
+                      border: "1px solid var(--border)",
+                    }}
                   />
                 ))}
             </div>
           ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                gap: 16,
+              }}
+            >
               {filtered.map((crop) => (
                 <CropCard
                   key={crop.id}
@@ -519,15 +740,29 @@ export default function Dashboard() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full gap-4">
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                gap: 16,
+              }}
+            >
               <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center"
                 style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 16,
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                <Activity size={28} style={{ color: "var(--text-3)" }} />
+                <Activity size={24} style={{ color: "var(--text-3)" }} />
               </div>
               <div style={{ color: "var(--text-2)" }}>
                 No crops match your filters
@@ -539,11 +774,15 @@ export default function Dashboard() {
                   setFilterCrop("All");
                   setFilterStatus("All");
                 }}
-                className="text-xs font-mono px-4 py-2 rounded-lg"
                 style={{
+                  fontSize: 11,
+                  fontFamily: "DM Mono, monospace",
+                  padding: "6px 16px",
+                  borderRadius: 8,
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                   color: "var(--text-3)",
+                  cursor: "pointer",
                 }}
               >
                 Clear filters

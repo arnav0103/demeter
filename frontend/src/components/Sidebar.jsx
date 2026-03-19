@@ -9,7 +9,6 @@ import {
   Brain,
   ChevronLeft,
   ChevronRight,
-  Zap,
 } from "lucide-react";
 import { useFarmData } from "../hooks/useFarmData";
 import { deriveCropStatus } from "../utils/dataUtils";
@@ -37,33 +36,64 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="flex flex-col border-r transition-all duration-300 relative"
       style={{
         width: collapsed ? 64 : 220,
         background: "var(--bg-2)",
-        borderColor: "var(--border)",
+        borderRight: "1px solid var(--border)",
         flexShrink: 0,
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        transition: "width 300ms ease",
+        overflow: "visible",
       }}
     >
       {/* Logo */}
       <div
-        className="flex items-center gap-3 px-4 py-5 border-b"
-        style={{ borderColor: "var(--border)" }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: collapsed ? "20px 0" : "20px 16px",
+          justifyContent: collapsed ? "center" : "flex-start",
+          borderBottom: "1px solid var(--border)",
+          height: 64,
+          boxSizing: "border-box",
+        }}
       >
         <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: "linear-gradient(135deg, #2d7a44, #4ade80)" }}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 10,
+            background: "linear-gradient(135deg, #2d7a44, #4ade80)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
         >
-          <Leaf size={16} fill="white" color="white" />
+          <Leaf size={15} fill="white" color="white" />
         </div>
         {!collapsed && (
-          <div className="overflow-hidden">
-            <div className="font-bold text-sm" style={{ color: "var(--text)" }}>
+          <div style={{ overflow: "hidden" }}>
+            <div
+              style={{
+                fontWeight: 700,
+                fontSize: 14,
+                color: "var(--text)",
+                lineHeight: 1.2,
+              }}
+            >
               Demeter
             </div>
             <div
-              className="text-[10px] font-mono"
-              style={{ color: "var(--text-3)" }}
+              style={{
+                fontSize: 9,
+                fontFamily: "DM Mono, monospace",
+                color: "var(--text-3)",
+                letterSpacing: "0.1em",
+              }}
             >
               AGRI·AI·v2
             </div>
@@ -71,53 +101,120 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Status bar */}
+      {/* Collapse toggle */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        style={{
+          position: "absolute",
+          top: 20,
+          right: -12,
+          width: 24,
+          height: 24,
+          borderRadius: "50%",
+          background: "var(--bg-3)",
+          border: "1px solid var(--border)",
+          color: "var(--text-3)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          zIndex: 10,
+          transition: "background 0.15s",
+        }}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.background = "var(--surface-2)")
+        }
+        onMouseLeave={(e) => (e.currentTarget.style.background = "var(--bg-3)")}
+        title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+      >
+        {collapsed ? <ChevronRight size={11} /> : <ChevronLeft size={11} />}
+      </button>
+
+      {/* Status pill */}
       {!collapsed && (
-        <div
-          className="mx-3 mt-3 px-3 py-2 rounded-lg flex items-center gap-2"
-          style={{
-            background: "rgba(74,222,128,0.08)",
-            border: "1px solid rgba(74,222,128,0.2)",
-          }}
-        >
-          <span
-            className="status-dot w-1.5 h-1.5 rounded-full flex-shrink-0"
-            style={{ background: "var(--green)" }}
-          />
-          <span
-            className="text-[10px] font-mono"
-            style={{ color: "var(--green)" }}
+        <div style={{ padding: "12px 12px 0" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 10px",
+              borderRadius: 8,
+              background: "rgba(74,222,128,0.08)",
+              border: "1px solid rgba(74,222,128,0.2)",
+            }}
           >
-            SYSTEM ONLINE
-          </span>
+            <span
+              className="status-dot"
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: "var(--green)",
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 10,
+                fontFamily: "DM Mono, monospace",
+                color: "var(--green)",
+              }}
+            >
+              SYSTEM ONLINE
+            </span>
+          </div>
         </div>
       )}
 
       {/* Nav */}
-      <nav className="flex-1 px-2 py-4 space-y-1">
+      <nav
+        style={{
+          flex: 1,
+          padding: "12px 8px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
         {NAV.map(({ label, icon: Icon, path, badge }) => {
           const active = loc.pathname === path;
           return (
             <Link
               key={label}
               to={path}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative group"
+              title={collapsed ? label : undefined}
               style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: collapsed ? "10px 0" : "10px 12px",
+                justifyContent: collapsed ? "center" : "flex-start",
+                borderRadius: 10,
                 background: active ? "rgba(74,222,128,0.12)" : "transparent",
                 color: active ? "var(--green)" : "var(--text-2)",
                 border: active
                   ? "1px solid rgba(74,222,128,0.25)"
                   : "1px solid transparent",
+                textDecoration: "none",
+                position: "relative",
+                transition: "all 0.15s",
               }}
             >
-              <Icon size={18} className="flex-shrink-0" />
+              <Icon size={17} style={{ flexShrink: 0 }} />
               {!collapsed && (
-                <span className="text-sm font-medium">{label}</span>
+                <span style={{ fontSize: 13, fontWeight: 500 }}>{label}</span>
               )}
+              {/* Badge — unread count */}
               {badge && !collapsed && (
                 <span
-                  className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded alert-pulse"
+                  className="alert-pulse"
                   style={{
+                    marginLeft: "auto",
+                    fontSize: 10,
+                    fontFamily: "DM Mono, monospace",
+                    padding: "1px 5px",
+                    borderRadius: 4,
                     background: "rgba(248,113,113,0.2)",
                     color: "var(--red)",
                   }}
@@ -127,111 +224,134 @@ export default function Sidebar() {
               )}
               {badge && collapsed && (
                 <span
-                  className="absolute top-1 right-1 w-2 h-2 rounded-full alert-pulse"
-                  style={{ background: "var(--red)" }}
-                />
-              )}
-              {collapsed && (
-                <div
-                  className="absolute left-full ml-2 px-2 py-1 rounded text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap"
+                  className="alert-pulse"
                   style={{
-                    background: "var(--surface-2)",
-                    border: "1px solid var(--border)",
-                    color: "var(--text)",
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: "var(--red)",
                   }}
-                >
-                  {label}
-                </div>
+                />
               )}
             </Link>
           );
         })}
       </nav>
 
-      {/* System health */}
+      {/* Alert count summary */}
       {!collapsed && (
-        <div className="p-3 border-t" style={{ borderColor: "var(--border)" }}>
+        <div style={{ padding: "0 12px 12px" }}>
           <div
-            className="px-3 py-2 rounded-lg"
-            style={{ background: "var(--surface)" }}
+            style={{
+              padding: "10px 12px",
+              borderRadius: 10,
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+            }}
           >
-            <div className="flex items-center justify-between mb-1">
-              <span
-                className="text-[10px] font-mono"
-                style={{ color: "var(--text-3)" }}
-              >
-                ALERT STATUS
-              </span>
-              <Zap
-                size={10}
-                style={{
-                  color: alertCount > 0 ? "var(--amber)" : "var(--green)",
-                }}
-              />
-            </div>
             <div
-              className="h-1 rounded-full"
-              style={{ background: "var(--border)" }}
+              style={{
+                fontSize: 9,
+                fontFamily: "DM Mono, monospace",
+                color: "var(--text-3)",
+                marginBottom: 6,
+                letterSpacing: "0.05em",
+              }}
             >
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width:
-                    alertCount > 0
-                      ? `${Math.min(alertCount * 20, 100)}%`
-                      : "5%",
-                  background: alertCount > 0 ? "var(--amber)" : "var(--green)",
-                }}
-              />
+              ALERT STATUS
             </div>
-            <div
-              className="text-[10px] font-mono mt-1"
-              style={{ color: "var(--text-3)" }}
-            >
-              {alertCount > 0
-                ? `${alertCount} crop(s) need attention`
-                : "All clear"}
-            </div>
+            {alertCount > 0 ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span
+                  className="alert-pulse"
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: "var(--red)",
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "DM Mono, monospace",
+                    color: "var(--red)",
+                  }}
+                >
+                  {alertCount} crop{alertCount !== 1 ? "s" : ""} need attention
+                </span>
+              </div>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span
+                  className="status-dot"
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: "var(--green)",
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "DM Mono, monospace",
+                    color: "var(--green)",
+                  }}
+                >
+                  All clear
+                </span>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-20 w-6 h-6 rounded-full flex items-center justify-center z-10 transition-colors"
+      {/* User row */}
+      <div
         style={{
-          background: "var(--surface-2)",
-          border: "1px solid var(--border)",
-          color: "var(--text-3)",
+          padding: collapsed ? "12px 8px" : "12px 12px",
+          borderTop: "1px solid var(--border)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          justifyContent: collapsed ? "center" : "flex-start",
         }}
       >
-        {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
-      </button>
-
-      {/* User */}
-      <div className="p-3 border-t" style={{ borderColor: "var(--border)" }}>
-        <div className="flex items-center gap-2">
-          <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-            style={{ background: "var(--amber-dim)", color: "var(--amber)" }}
-          >
-            R
-          </div>
-          {!collapsed && (
-            <div>
-              <div
-                className="text-xs font-semibold"
-                style={{ color: "var(--text)" }}
-              >
-                Rajesh Rai
-              </div>
-              <div className="text-[10px]" style={{ color: "var(--text-3)" }}>
-                Farm Owner
-              </div>
-            </div>
-          )}
+        <div
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: "50%",
+            background: "var(--amber-dim)",
+            color: "var(--amber)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 11,
+            fontWeight: 700,
+            flexShrink: 0,
+          }}
+        >
+          R
         </div>
+        {!collapsed && (
+          <div>
+            <div
+              style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}
+            >
+              Rajesh Rai
+            </div>
+            <div style={{ fontSize: 10, color: "var(--text-3)" }}>
+              Farm Owner
+            </div>
+          </div>
+        )}
       </div>
     </aside>
   );
