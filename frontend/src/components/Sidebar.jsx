@@ -32,7 +32,7 @@ export default function Sidebar() {
     { label: "Crops", icon: LayoutGrid, path: "/dashboard" },
     { label: "Analytics", icon: BarChart3, path: "/analytics" },
     { label: "Alerts", icon: Bell, path: "/alerts", badge: alertCount || null },
-    { label: "Agent AI", icon: Brain, path: "/control" },
+    { label: "Agent Control", icon: Brain, path: "/control" },
     { label: "Settings", icon: Settings, path: "/settings" },
   ];
 

@@ -1,9 +1,7 @@
-// ============================================================
-// DEMETER MOCK DATA
-// Set USE_MOCK_DATA = true to use local test data
-// Set USE_MOCK_DATA = false to connect to the real backend API
-// ============================================================
-export const USE_MOCK_DATA = true;
+// MOCK DATA
+// -- Set USE_MOCK_DATA = true to use local test data
+// -- Set USE_MOCK_DATA = false to connect to the real backend API
+export const USE_MOCK_DATA = false;
 
 // HELPERS
 const ts = (daysAgo, hour = 10, min = 0) => {
@@ -221,7 +219,7 @@ export const MOCK_SEARCH_RESULT = {
 2. **Precedent**: 3 similar past states found. In 2 of those cases, a slight EC boost
    improved growth rate. No disease was detected in the last 5 cycles.
 
-3. **Logic**: EC at 1.4 is slightly below the 1.5–1.8 target for late vegetative.
+3. **Logic**: EC at 1.4 is slightly below the 1.5-1.8 target for late vegetative.
    A small nutrient dosage increase will push it into the optimal window.
    Fan speed is adequate; no VPD concerns.
 

@@ -661,6 +661,7 @@ export default function AgentControl() {
                 overflow: "hidden",
                 background: "var(--surface)",
                 border: "1px solid rgba(74,222,128,0.3)",
+                flexShrink: 0,
               }}
             >
               <div

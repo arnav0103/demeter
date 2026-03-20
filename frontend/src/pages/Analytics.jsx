@@ -660,6 +660,7 @@ export default function Analytics() {
               overflow: "hidden",
               background: "var(--surface)",
               border: "1px solid var(--border)",
+              flexShrink: 0,
             }}
           >
             <div
@@ -811,6 +812,7 @@ export default function Analytics() {
               overflow: "hidden",
               background: "var(--surface)",
               border: "1px solid var(--border)",
+              flexShrink: 0,
             }}
           >
             <div
