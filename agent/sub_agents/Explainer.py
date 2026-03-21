@@ -1,6 +1,4 @@
 import json
-from langchain_core.messages import SystemMessage, HumanMessage
-
 
 class ExplainerAgent:
     def __init__(self, llm_client):
@@ -10,7 +8,7 @@ class ExplainerAgent:
         """
         Generates a detailed, human-readable log of the decision process.
         """
-
+        
         # Construct the context for the LLM
         context = f"""
         CONTEXT DATA:
@@ -37,11 +35,14 @@ class ExplainerAgent:
         """
 
         try:
-            messages = [
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=context),
-            ]
-            response = self.llm.invoke(messages)
-            return response.content
+            response = self.llm.chat.completions.create(
+                model="qwen/qwen3-32b",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": context}
+                ],
+                temperature=0.3 # Keep it factual
+            )
+            return response.choices[0].message.content
         except Exception as e:
             return f"Explanation unavailable: {str(e)}"

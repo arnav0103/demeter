@@ -5,7 +5,7 @@ import pickle
 import os
 
 class ContextualBandit:
-    def __init__(self, n_actions=15, feature_dim=515):
+    def __init__(self, n_actions=15, feature_dim=519):
         """
         LinGreedy Implementation (Pure Exploitation).
         We removed 'alpha' because we do not want to explore.
@@ -47,6 +47,8 @@ class ContextualBandit:
             
             # 2. Expected Reward (Dot Product)
             # This is the "Best Guess" for how good this action is.
+
+            print(f"Action {a}: Theta shape: {theta.shape}, Context shape: {context_vector.shape}")
             pred = theta.dot(context_vector)
             predicted_rewards[a] = pred
             

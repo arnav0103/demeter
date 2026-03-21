@@ -1,93 +1,103 @@
+from ultralytics import YOLO
+import cv2
+import json
 import os
-import requests
 import logging
+import numpy as np
 import base64
-from dotenv import load_dotenv
+from io import BytesIO
+from PIL import Image
 
+# Setup basic logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class VisionAgent:
-    def __init__(self):
-        load_dotenv()
-        self.endpoint = os.getenv("AZURE_ENDPOINT", "").rstrip('/')
-        self.prediction_key = os.getenv("AZURE_PREDICTION_KEY")
-        self.project_id = os.getenv("AZURE_PROJECT_ID")
-        self.iteration_name = os.getenv("AZURE_ITERATION_NAME")
-        self.model_name = "azure_custom_vision"
+    def __init__(self, model_path=None):
+        logger.info("👁️ Initializing Vision Agent (Doctor)...")
         
-        if not all([self.endpoint, self.prediction_key, self.project_id, self.iteration_name]):
-            logger.error("Missing Azure Custom Vision environment variables.")
-
-    def analyze_frame(self, image_input, threshold=0.25):
-        if not image_input:
-            return {"error": "No image input provided"}
-
-        image_data_bytes = None
-
-        if isinstance(image_input, str) and len(image_input) < 1000 and os.path.exists(image_input):
-            try:
-                with open(image_input, "rb") as f:
-                    image_data_bytes = f.read()
-            except Exception as e:
-                return {"error": str(e)}
+        # 1. Find the project root
+        if model_path:
+            default_model = model_path
         else:
-            try:
-                if ',' in image_input:
-                    image_input = image_input.split(',')[1]
-                image_data_bytes = base64.b64decode(image_input)
-            except Exception as e:
-                return {
-                    "status": "Error",
-                    "model_used": self.model_name,
-                    "health_assessment": "UNKNOWN", 
-                    "visual_alert": False,
-                    "object_counts": {},
-                    "detailed_detections": [],
-                    "error": str(e)
-                }
+            current_file = os.path.abspath(__file__)
+            agent_dir = os.path.dirname(os.path.dirname(current_file)) # agent/
+            default_model = os.path.join(agent_dir, "model", "plant_disease_model.pt")
+        
+        self.model_name = default_model
+        
+        # 2. Load Model with Fallback
+        try:
+            if os.path.exists(self.model_name):
+                logger.info(f"✅ Found plant disease model at: {self.model_name}")
+                self.model = YOLO(self.model_name)
+            else:
+                logger.warning(f"⚠️ Custom model not found. Using generic YOLOv8n.")
+                self.model = YOLO("yolov8n.pt")
+                self.model_name = "yolov8n.pt"
+            
+            # Optimization
+            self.model.to('cpu')
+            
+        except Exception as e:
+            logger.error(f"❌ Critical Error loading model: {e}")
+            self.model = None
+
+    def analyze_frame(self, image_b64):
+        """
+        Scans a base64 encoded image for pests, diseases, or growth stages.
+        """
+        if not self.model:
+            return {"error": "Model not initialized"}
+            
+        if not image_b64:
+            return {"error": "No image data provided"}
 
         try:
-            url = f"{self.endpoint}/customvision/v3.0/Prediction/{self.project_id}/detect/iterations/{self.iteration_name}/image"
+            # 3. Decode Base64 to Image
+            # Handle data URI scheme if present (e.g., "data:image/png;base64,...")
+            if "," in image_b64:
+                image_b64 = image_b64.split(",")[1]
             
-            headers = {
-                "Prediction-Key": self.prediction_key,
-                "Content-Type": "application/octet-stream"
-            }
-            
-            response = requests.post(url, headers=headers, data=image_data_bytes)
-            response.raise_for_status()
-            
-            predictions = response.json().get("predictions", [])
+            image_data = base64.b64decode(image_b64)
+            image = Image.open(BytesIO(image_data))
+
+            # 4. Run Inference
+            # YOLO can accept PIL Images directly
+            results = self.model.predict(image, conf=0.25, save=False, verbose=False)
+            result = results[0]
             
             detections = []
             summary_counts = {}
             
-            for p in predictions:
-                confidence = p["probability"]
-                if confidence >= threshold:
-                    label = p["tagName"]
-                    box = p["boundingBox"]
-                    
-                    detections.append({
-                        "object": label,
-                        "confidence": round(confidence, 2),
-                        "box": [
-                            round(box["left"], 2),
-                            round(box["top"], 2),
-                            round(box["width"], 2),
-                            round(box["height"], 2)
-                        ]
-                    })
-                    summary_counts[label] = summary_counts.get(label, 0) + 1
+            for box in result.boxes:
+                class_id = int(box.cls[0])
+                label = self.model.names[class_id]
+                confidence = float(box.conf[0])
+                
+                detections.append({
+                    "object": label,
+                    "confidence": round(confidence, 2),
+                    "box": [round(x, 2) for x in box.xywhn[0].tolist()] 
+                })
+                summary_counts[label] = summary_counts.get(label, 0) + 1
 
+            # 5. Health Logic
             health_status = "HEALTHY"
             visual_alert = False
             
-            if detections:
+            if not detections:
+                # If generic model, it might just see nothing. 
+                # If disease model, empty usually means healthy.
+                if "yolov8n" in self.model_name:
+                    health_status = "NO_OBJECTS_DETECTED"
+                else:
+                    health_status = "HEALTHY"
+            else:
                 for label in summary_counts:
                     label_lower = label.lower()
-                    sick_keywords = ['spot', 'rot', 'blight', 'mildew', 'rust', 'virus', 'miner', 'mite', 'wilt', 'aphid']
+                    # Keywords that imply sickness
+                    sick_keywords = ['spot', 'rot', 'blight', 'mildew', 'rust', 'virus', 'miner', 'mite', 'wilt']
                     if any(x in label_lower for x in sick_keywords) and "healthy" not in label_lower:
                         health_status = "DISEASE_DETECTED"
                         visual_alert = True
@@ -103,13 +113,6 @@ class VisionAgent:
             }
             
         except Exception as e:
-            logger.error(f"Error during Azure analysis: {e}")
-            return {
-                "status": "Error",
-                "model_used": self.model_name,
-                "health_assessment": "UNKNOWN", 
-                "visual_alert": False,
-                "object_counts": {},
-                "detailed_detections": [],
-                "error": str(e)
-            }
+           
+            logger.error(f"Error during analysis: {e}")
+            return {"error": str(e)}
