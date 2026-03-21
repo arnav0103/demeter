@@ -233,21 +233,27 @@ docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant
 python backend/server/create-index.py
 ```
 
-### 5. Start the Backend
+### 5. Start the Agents
+
+Download [model_bandit_greedy.pkl](https://drive.google.com/file/d/1spuw3TogZRtP0fYZkYA2Kxz1-CiUzBDA/view?usp=drive_link) and [plant_disease_model.pt](https://drive.google.com/file/d/1NkdGt0CFS7tx4vttp8Tod8ksjDLib8dp/view?usp=drive_link) and place them under `agent/Marl` and `agent/Marl/model` respectively.
 
 ```bash
 # Start the main AI agent system
 python agent/main_agent.py
+```
 
-# In another terminal, start the API server
+### 6. Start the Backend
+
+```bash
+# Start the API server
 python backend/server/main.py
 
-# And in yet another, start the website backend
+# In another terminal, start the website backend
 cd backend/node_server
 node index.js
 ```
 
-### 6. Start the Frontend
+### 7. Run the Frontend
 
 ```bash
 cd frontend
