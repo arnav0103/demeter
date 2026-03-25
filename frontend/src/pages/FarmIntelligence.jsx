@@ -937,59 +937,10 @@ SYSTEM: Hydroponic multi-crop farm management system (Demeter).`.trim();
 
     try {
       const context = buildLLMContext(selectedCrop);
-      const languageInstruction =
-        lang === "hi"
-          ? "Respond entirely in Hindi. Use agricultural terminology appropriate for Hindi speakers."
-          : "Respond entirely in English.";
+      const data = await agentService.askDemeter(query, context, lang);
 
-      const systemPrompt = `You are Demeter Intelligence, an expert AI agronomist and data analyst for a hydroponic farm management system. 
-You have access to live farm data and must answer questions about crop health, agent decisions, and farm performance.
-Be specific, cite the actual numbers from the data, and be practical. Keep answers concise but thorough.
-When explaining agent decisions, reference the explanation_log if available.
-Before answering, wrap your step-by-step reasoning in <thinking>...</thinking> tags.
-CRITICAL INSTRUCTION: ${languageInstruction}`;
-
-      const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT;
-      const AZURE_DEPLOYMENT = process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
-      const AZURE_API_VERSION = process.env.AZURE_OPENAI_API_VERSION;
-      const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY;
-
-      const url = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT}/chat/completions?api-version=${AZURE_API_VERSION}`;
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "api-key": AZURE_API_KEY,
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: "system", content: systemPrompt },
-            {
-              role: "user",
-              content: `FARM DATA:\n${context}\n\nQUESTION: ${query}`,
-            },
-          ],
-          max_tokens: 1000,
-          temperature: 0.2,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Azure OpenAI request failed");
-      const data = await response.json();
-      const rawText = data.choices?.[0]?.message?.content || "";
-
-      // Parse <thinking> tags to split reasoning and answer
-      let thinking = "";
-      let answer = rawText;
-      const thinkingMatch = rawText.match(/<thinking>([\s\S]*?)<\/thinking>/);
-      if (thinkingMatch) {
-        thinking = thinkingMatch[1].trim();
-        answer = rawText.replace(/<thinking>[\s\S]*?<\/thinking>/, "").trim();
-      }
-
-      setLlmThinking(thinking);
-      setLlmAnswer(answer || t("intel_no_response"));
+      setLlmThinking(data.thinking || "");
+      setLlmAnswer(data.answer || t("intel_no_response"));
 
       // Also run a search to show related crops
       if (selectedCrop) {
@@ -1075,16 +1026,21 @@ CRITICAL INSTRUCTION: ${languageInstruction}`;
           if (data.transcription) {
             setTranscription(data.transcription);
             setTextQuery(data.transcription);
-          }
-          if (data.results) {
-            setResults(
-              data.results.map((r) => ({
-                id: r.id,
-                score: r.score || 1,
-                payload: r.payload,
-              })),
-            );
-            setHasQueried(true);
+
+            if (mode === "ask") {
+              await handleAsk(data.transcription);
+            } else {
+              if (data.results) {
+                setResults(
+                  data.results.map((r) => ({
+                    id: r.id,
+                    score: r.score || 1,
+                    payload: r.payload,
+                  })),
+                );
+                setHasQueried(true);
+              }
+            }
           }
         } finally {
           setLoading(false);

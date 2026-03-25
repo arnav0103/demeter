@@ -7,6 +7,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 # Adjust this depending on where main.py sits relative to root folder
 project_root = os.path.abspath(os.path.join(current_dir, "../../"))
 sys.path.append(project_root)
+
 agent_root = os.path.abspath(os.path.join(project_root, "agent"))
 sys.path.append(agent_root)
 
@@ -19,6 +20,7 @@ if os.path.exists(env_path):
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+
 from Sentinel.agent import FMUBuilder
 
 # Import the logic functions
@@ -28,6 +30,7 @@ from backend.server.functions import (
     process_text_query,
     process_audio_search,
     process_cycle_stream,
+    process_ask_query,
 )
 
 app = FastAPI()
@@ -41,7 +44,9 @@ app.add_middleware(
 )
 
 print("🌱 Server Starting...")
+
 builder = FMUBuilder()
+
 print("✅ Server Ready.")
 
 
@@ -54,7 +59,6 @@ async def ingest_endpoint(
 
 @app.post("/search")
 async def search_endpoint(file: UploadFile = File(...), sensors: str = Form(...)):
-    # This endpoint now triggers the Full Agent Reasoning Loop
     return await process_search(file, sensors, builder)
 
 
@@ -76,6 +80,13 @@ async def text_query_endpoint(query: str = Form(...)):
 @app.post("/query-audio")
 async def audio_query_endpoint(file: UploadFile = File(...)):
     return await process_audio_search(file)
+
+
+@app.post("/ask-demeter")
+async def ask_demeter_endpoint(
+    query: str = Form(...), context: str = Form(...), language: str = Form(...)
+):
+    return await process_ask_query(query, context, language)
 
 
 if __name__ == "__main__":

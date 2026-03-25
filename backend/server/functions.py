@@ -1,79 +1,66 @@
+import sys
 import os
-import shutil
-import json
-import traceback
-import base64
-import asyncio
-from fastapi import UploadFile, HTTPException
-from groq import Groq
-from qdrant_client.http import models
-from datetime import datetime
 import re
+import json
+import base64
+import shutil
+import asyncio
+import traceback
+from datetime import datetime
+from fastapi import UploadFile, HTTPException, Form
+from qdrant_client import models
 from langchain_core.messages import SystemMessage, HumanMessage
-
-# --- AGENT IMPORTS ---
-from agent.sub_agents.Researcher import ResearcherAgent
-from agent.sub_agents.Supervisor import SupervisorAgent
-from agent.sub_agents.atmospheric_agent import AtmosphericAgent
-from agent.sub_agents.water_agent import WaterAgent
-from agent.sub_agents.judge_agent import JudgeAgent
-from agent.sub_agents.Explainer import ExplainerAgent
 
 from Qdrant.Store import store_fmu, COLLECTION_NAME
 from Qdrant.Client import client
 
-# --- INITIALIZE COGNITIVE STACK ---
-print("🌱 Initializing Demeter Cognitive Stack....")
+# Import Agent instances
+from agent.sub_agents.fetching_agent import FetchingAgent
+from agent.sub_agents.atmospheric_agent import AtmosphericAgent
+from agent.sub_agents.water_agent import WaterAgent
+from agent.sub_agents.Supervisor import SupervisorAgent
+from agent.sub_agents.Researcher import ResearcherAgent
+from agent.sub_agents.Explainer import ExplainerAgent
 
-researcher = ResearcherAgent()
+# Global singletons to avoid re-initializing heavy models per request
+fetcher = FetchingAgent()
 atmos_agent = AtmosphericAgent()
 water_agent = WaterAgent()
+researcher = ResearcherAgent()
 supervisor = SupervisorAgent(researcher_agent=researcher)
-judge = JudgeAgent()
-explainer = ExplainerAgent(supervisor.model)
-
-print("✅ Agents Ready.")
-
-# --- HELPER FUNCTIONS ---
+explainer = ExplainerAgent()
 
 
-def get_next_sequence_number(crop_id: str) -> int:
-    try:
-        count_result = client.count(
-            collection_name=COLLECTION_NAME,
-            count_filter=models.Filter(
-                must=[
-                    models.FieldCondition(
-                        key="crop_id", match=models.MatchValue(value=crop_id)
-                    )
-                ]
-            ),
-        )
-        return count_result.count + 1
-    except Exception as e:
-        print(f"⚠️ Could not calculate sequence: {e}")
-        return 1
-
-
-def filter_numeric_sensors(raw_data: dict) -> dict:
-    """
-    Extracts only floating-point sensor values.
-    """
+def filter_numeric_sensors(raw_sensors: dict):
+    wanted = {"pH", "EC", "temp", "humidity"}
     clean = {}
-    valid_keys = ["ph", "ec", "temp", "humidity", "co2", "light", "tds", "do", "orp"]
-
-    for k, v in raw_data.items():
-        if any(valid in k.lower() for valid in valid_keys):
+    for k, v in raw_sensors.items():
+        if k in wanted:
             try:
                 clean[k] = float(v)
-            except (ValueError, TypeError):
+            except:
                 pass
     return clean
 
 
-# --- CORE ENDPOINTS ---
+def get_next_sequence_number(crop_id: str) -> int:
+    try:
+        count_filter = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="crop_id", match=models.MatchValue(value=crop_id)
+                )
+            ]
+        )
+        count_result = client.count(
+            collection_name=COLLECTION_NAME, count_filter=count_filter
+        )
+        return count_result.count + 1
+    except:
+        return 1
 
 
+# --- ENDPOINTS ---
 async def process_ingest(
     file: UploadFile, sensors_str: str, metadata_str: str, builder
 ):
@@ -116,7 +103,6 @@ async def process_ingest(
         store_fmu(fmu)
 
         return {"status": "success", "fmu_id": fmu.id}
-
     finally:
         if os.path.exists(temp_filename):
             os.remove(temp_filename)
@@ -127,7 +113,6 @@ async def process_search(file: UploadFile, sensors_str: str, builder):
     SIMPLIFIED AGENT LOOP: Atmos + Water + Supervisor ONLY.
     """
     temp_filename = f"temp_search_{file.filename}"
-
     try:
         # --- 1. SETUP: File & Base64 ---
         file_content = await file.read()
@@ -148,15 +133,16 @@ async def process_search(file: UploadFile, sensors_str: str, builder):
         target_crop_id = raw_sensor_data.get("crop_id")
         if not target_crop_id:
             target_crop_id = f"Batch_{target_crop}_{datetime.now().strftime('%Y%m')}"
+
         seq_num = get_next_sequence_number(target_crop_id)
 
-        # Metadata construction (Using "sensors" key as requested)
+        # Metadata construction
         metadata = {
             "crop": target_crop,
             "stage": raw_sensor_data.get("stage", "Unknown"),
             "crop_id": target_crop_id,
             "sequence_number": seq_num,
-            "sensors": clean_sensors,  # <--- Correct key for web
+            "sensors": clean_sensors,
             "action_taken": "PENDING_DECISION",
             "outcome": "PENDING",
         }
@@ -179,7 +165,6 @@ async def process_search(file: UploadFile, sensors_str: str, builder):
             limit=3,
             with_payload=True,
         )
-
         points_list = hits.points if hasattr(hits, "points") else hits
 
         research_query = f"optimal hydroponic conditions for {target_crop} in {metadata['stage']} stage"
@@ -210,7 +195,6 @@ async def process_search(file: UploadFile, sensors_str: str, builder):
 
         # --- 5. SUPERVISOR (Synthesis) ---
         print("👮 Supervisor Finalizing...")
-
         final_decision_json = supervisor.synthesize_plan(
             atmos_plan,
             water_plan,
@@ -230,9 +214,11 @@ async def process_search(file: UploadFile, sensors_str: str, builder):
                 else query_fmu.vector
             ),
         }
+
         similar_fmus_formatted = [
             {"score": h.score, "payload": h.payload} for h in points_list
         ]
+
         explanation_log = explainer.explain(
             current_fmu=current_fmu_context,
             similar_fmus=similar_fmus_formatted,
@@ -267,7 +253,6 @@ async def process_search(file: UploadFile, sensors_str: str, builder):
         print(f"❌ Pipeline Error: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-
     finally:
         # Cleanup temp file
         if os.path.exists(temp_filename):
@@ -282,7 +267,6 @@ async def process_cycle_stream(file: UploadFile, sensors_str: str, builder):
     REAL-TIME AGENT LOOP: Streams step-by-step reasoning via SSE.
     """
     temp_filename = f"temp_stream_{file.filename}"
-
     try:
         yield f"data: {json.dumps({'agent': 'SYSTEM', 'text': '🚀 Initializing Demeter Orchestrator...'})}\n\n"
         await asyncio.sleep(0.5)
@@ -308,6 +292,7 @@ async def process_cycle_stream(file: UploadFile, sensors_str: str, builder):
             target_crop_id = f"Batch_{target_crop}_{datetime.now().strftime('%Y%m')}"
 
         seq_num = get_next_sequence_number(target_crop_id)
+
         yield f"data: {json.dumps({'agent': 'FETCHER', 'text': f'[Fetcher] 🔢 Sequence for {target_crop_id}: {seq_num}'})}\n\n"
         await asyncio.sleep(0.3)
 
@@ -323,6 +308,7 @@ async def process_cycle_stream(file: UploadFile, sensors_str: str, builder):
 
         query_fmu = builder.create_fmu(abs_image_path, clean_sensors, metadata=metadata)
         store_fmu(query_fmu)
+
         yield f"data: {json.dumps({'agent': 'FETCHER', 'text': f'[Fetcher] 🧠 FMU Created (ID: {query_fmu.id}) — Handing off to specialists.'})}\n\n"
         await asyncio.sleep(0.5)
 
@@ -331,7 +317,7 @@ async def process_cycle_stream(file: UploadFile, sensors_str: str, builder):
         research_query = f"optimal hydroponic conditions for {target_crop} in {metadata['stage']} stage"
         research_context = researcher.search(research_query)
         await asyncio.sleep(0.5)
-        yield f"data: {json.dumps({'agent': 'RESEARCHER', 'text': '   📚 Found relevant scientific data.'})}\n\n"
+        yield f"data: {json.dumps({'agent': 'RESEARCHER', 'text': ' 📚 Found relevant scientific data.'})}\n\n"
 
         # --- 4. AGENTS ---
         strat_instr = "Maintain optimal crop-specific parameters."
@@ -349,7 +335,7 @@ async def process_cycle_stream(file: UploadFile, sensors_str: str, builder):
             history="No history provided.",
             image_b64=image_b64,
         )
-        yield f"data: {json.dumps({'agent': 'ATMOSPHERIC', 'text': f'   ✅ Plan Approved: {json.dumps(atmos_plan)}'})}\n\n"
+        yield f"data: {json.dumps({'agent': 'ATMOSPHERIC', 'text': f' ✅ Plan Approved: {json.dumps(atmos_plan)}'})}\n\n"
         await asyncio.sleep(0.5)
 
         yield f"data: {json.dumps({'agent': 'WATER', 'text': '💧 Water Agent — deciding...'})}\n\n"
@@ -360,13 +346,13 @@ async def process_cycle_stream(file: UploadFile, sensors_str: str, builder):
             history="No history provided.",
             image_b64=image_b64,
         )
-        yield f"data: {json.dumps({'agent': 'WATER', 'text': f'   ✅ Plan Approved: {json.dumps(water_plan)}'})}\n\n"
+        yield f"data: {json.dumps({'agent': 'WATER', 'text': f' ✅ Plan Approved: {json.dumps(water_plan)}'})}\n\n"
         await asyncio.sleep(0.5)
 
         # --- 5. SUPERVISOR ---
-        yield f"data: {json.dumps({'agent': 'SUPERVISOR', 'text': '   🔗 Supervisor Merging Plans...'})}\n\n"
+        yield f"data: {json.dumps({'agent': 'SUPERVISOR', 'text': ' 🔗 Supervisor Merging Plans...'})}\n\n"
         await asyncio.sleep(0.3)
-        yield f"data: {json.dumps({'agent': 'SUPERVISOR', 'text': '   ⚖️ Supervisor Judging...'})}\n\n"
+        yield f"data: {json.dumps({'agent': 'SUPERVISOR', 'text': ' ⚖️ Supervisor Judging...'})}\n\n"
 
         final_decision_json = supervisor.synthesize_plan(
             atmos_plan,
@@ -375,8 +361,9 @@ async def process_cycle_stream(file: UploadFile, sensors_str: str, builder):
             "No history context.",
             strategy_info=(strat_name, strat_instr, action_idx),
         )
+
         await asyncio.sleep(0.5)
-        yield f"data: {json.dumps({'agent': 'SUPERVISOR', 'text': '   ✅ Plan looks solid.'})}\n\n"
+        yield f"data: {json.dumps({'agent': 'SUPERVISOR', 'text': ' ✅ Plan looks solid.'})}\n\n"
 
         # --- 6. FINAL ---
         yield f"data: {json.dumps({'agent': 'SUPERVISOR', 'text': f'🚜 Activating Hardware: {json.dumps(final_decision_json)}'})}\n\n"
@@ -386,7 +373,6 @@ async def process_cycle_stream(file: UploadFile, sensors_str: str, builder):
 
     except Exception as e:
         yield f"data: {json.dumps({'agent': 'SYSTEM', 'text': f'❌ Error: {str(e)}', 'level': 'error'})}\n\n"
-
     finally:
         if os.path.exists(temp_filename):
             try:
@@ -399,144 +385,216 @@ def extract_json(text):
     """
     Robustly extracts the first valid JSON object from text string.
     """
-    # Strip <think>...</think> blocks FIRST — reasoning models emit these before the answer
-    cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
-
-    for source in (cleaned, text):  # fall back to raw text if stripping broke something
+    cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    match = re.search(r"\{.*\}", cleaned, re.DOTALL)
+    if match:
         try:
-            # 1. Try direct parse (model returned only JSON)
-            return json.loads(source)
-        except Exception:
+            return json.loads(match.group(0))
+        except json.JSONDecodeError:
             pass
-
-        try:
-            # 2. Try finding content inside ```json ... ```
-            match = re.search(r"```json\s*(\{.*?\})\s*```", source, re.DOTALL)
-            if match:
-                return json.loads(match.group(1))
-
-            # 3. Try finding content inside plain ``` ... ```
-            match = re.search(r"```\s*(\{.*?\})\s*```", source, re.DOTALL)
-            if match:
-                return json.loads(match.group(1))
-
-            # 4. Fallback: Find the LAST outermost { ... } (avoids grabbing think-block JSON)
-            matches = list(
-                re.finditer(r"(\{[^{}]*(?:\{[^{}]*\}[^{}]*)?\})", source, re.DOTALL)
-            )
-            if matches:
-                return json.loads(matches[-1].group(1))
-
-        except Exception:
-            pass
-
-    return {}
+    return None
 
 
 async def process_text_query(text: str):
+    """
+    HYBRID FILTER ENGINE:
+    Uses LangChain to extract both Exact/Range limits (for Qdrant)
+    AND substring matches (for Python Post-Filtering of Agent Logic).
+    """
+    system_prompt = """
+    You are a Database Translator for an AI Hydroponic Farm.
+    Your goal: Convert natural language queries into a precise JSON filter object.
+    
+    AVAILABLE METADATA FIELDS (String):
+    - crop (e.g., "Tomato", "Lettuce", "Basil")
+    - stage (e.g., "Seedling", "Vegetative", "Flowering")
+    - outcome (e.g., "Positive", "Negative")
+    
+    AVAILABLE SENSOR FIELDS (Numeric):
+    - pH (float, e.g., 5.5 to 6.5)
+    - EC (float, e.g., 1.0 to 3.0)
+    - temp (float, e.g., 20.0 to 30.0)
+    - humidity (float, e.g., 40.0 to 80.0)
+    
+    AVAILABLE AGENT LOGIC FIELDS (Text/Substring):
+    - action_taken (Use this to search for specific agent decisions like "FLUSH", "INCREASE_WATER", "DECREASE_NUTRIENTS")
+    - strategic_intent (e.g., "STANDARD_MAINTENANCE", "RECOVERY")
+    
+    OUTPUT SCHEMA:
+    {
+      "filters": [
+        {
+          "field": "field_name",
+          "operator": "exact" | "text" | "gt" | "lt" | "gte" | "lte",
+          "value": string_or_number
+        }
+      ]
+    }
+    
+    RULES:
+    1. Use "exact" for exact string matches (crop, stage, outcome, strategic_intent).
+    2. Use "text" for partial/substring matches (CRITICAL for 'action_taken' since it contains stringified JSON records).
+    3. Use "gt", "lt", "gte", "lte" for numeric sensor comparisons.
+    4. Translate queries into English (e.g., "Tamatar" -> "Tomato", "Kharab" -> "Negative").
+    
+    EXAMPLE: "Find tomato crops in vegetative stage with pH over 6.0 where the agent flushed the tank"
+    {
+      "filters": [
+        { "field": "crop", "operator": "exact", "value": "Tomato" },
+        { "field": "stage", "operator": "exact", "value": "Vegetative" },
+        { "field": "pH", "operator": "gt", "value": 6.0 },
+        { "field": "action_taken", "operator": "text", "value": "FLUSH" }
+      ]
+    }
+    
+    Return ONLY valid JSON. If no filters apply, return { "filters": [] }.
+    """
 
     try:
-        # 🟢 1. STRICT SYSTEM PROMPT
-        system_prompt = """
-        You are a Database Translator. Convert the user's natural language query into a strict JSON filter for Qdrant.
-        
-        TARGET SCHEMA:
-        {
-            "must": [
-                { "key": "crop", "match": "lettuce" },
-                { "key": "stage", "match": "vegetative" }
-            ]
-        }
-        
-        RULES:
-        1. Output ONLY valid JSON. No conversational text.
-        2. Use the key "must" for the list of conditions.
-        3. Field names in payload are usually: "crop", "crop_id", "stage", "outcome".
-        4. If the user asks for everything, return { "must": [] }.
-        """
-
-        print(f"🗣️ User Query: {text}")
-
         response = supervisor.model.invoke(
             [SystemMessage(content=system_prompt), HumanMessage(content=text)]
         )
 
-        # 🟢 2. ROBUST PARSING
-        filter_logic = extract_json(response.content)
+        raw_output = response.content
+        filter_logic = extract_json(raw_output)
 
         if not filter_logic:
-            print(f"⚠️ Failed to parse JSON from: {response.content}")
             return {
                 "status": "error",
-                "message": "Could not understand query structure.",
+                "message": "Failed to parse JSON filter.",
+                "query_logic": raw_output,
             }
 
-        print(f"⚙️ Parsed Logic: {filter_logic}")
+        qdrant_conditions = []
+        post_filters = []
 
-        # 🟢 3. CONSTRUCT QDRANT FILTER
-        conditions = []
-        for item in filter_logic.get("must", []):
-            conditions.append(
-                models.FieldCondition(
-                    key=item["key"], match=models.MatchValue(value=item["match"])
-                )
-            )
+        if "filters" in filter_logic:
+            for rule in filter_logic["filters"]:
+                field = rule.get("field")
+                op = rule.get("operator", "exact")
+                val = rule.get("value")
 
-        # 🟢 4. EXECUTE SEARCH
-        if conditions:
-            scroll_filter = models.Filter(must=conditions)
-            results = client.scroll(
-                collection_name=COLLECTION_NAME,
-                scroll_filter=scroll_filter,
-                limit=10,
-                with_payload=True,
-            )
-        else:
-            # If no conditions, return the latest 10 items
-            results = client.scroll(
-                collection_name=COLLECTION_NAME, limit=10, with_payload=True
-            )
+                if not field or val is None:
+                    continue
 
-        points = results[0]
+                # Store text substring matches for Python Post-Filtering
+                if op == "text":
+                    post_filters.append((field, str(val).lower()))
+                    continue
+
+                # Handle numeric sensors (nested routing)
+                if field.lower() in ["ph", "ec", "temp", "humidity"]:
+                    if field.lower() == "ph":
+                        field = "pH"
+                    if field.lower() == "ec":
+                        field = "EC"
+                    if field.lower() == "temp":
+                        field = "temp"
+                    if field.lower() == "humidity":
+                        field = "humidity"
+
+                    path1 = f"sensors.{field}"
+                    path2 = f"sensor_data.{field}"
+
+                    if op == "exact":
+                        qdrant_conditions.append(
+                            models.Filter(
+                                should=[
+                                    models.FieldCondition(
+                                        key=path1, match=models.MatchValue(value=val)
+                                    ),
+                                    models.FieldCondition(
+                                        key=path2, match=models.MatchValue(value=val)
+                                    ),
+                                ]
+                            )
+                        )
+                    else:
+                        try:
+                            num_val = float(val)
+                            range_kwargs = {op: num_val}
+                            qdrant_conditions.append(
+                                models.Filter(
+                                    should=[
+                                        models.FieldCondition(
+                                            key=path1,
+                                            range=models.Range(**range_kwargs),
+                                        ),
+                                        models.FieldCondition(
+                                            key=path2,
+                                            range=models.Range(**range_kwargs),
+                                        ),
+                                    ]
+                                )
+                            )
+                        except ValueError:
+                            pass
+                else:
+                    # Exact string fields
+                    qdrant_conditions.append(
+                        models.FieldCondition(
+                            key=field, match=models.MatchValue(value=val)
+                        )
+                    )
+
+        # 1. Hardware Search (Qdrant)
+        scroll_filter = (
+            models.Filter(must=qdrant_conditions) if qdrant_conditions else None
+        )
+
+        results, next_offset = client.scroll(
+            collection_name=COLLECTION_NAME,
+            scroll_filter=scroll_filter,
+            limit=100,  # Pull a larger batch to account for post-filtering
+            with_payload=True,
+        )
+
+        # 2. Logic Search (Python Post-Filtering)
+        # We do this because 'action_taken' is a complex JSON string.
+        # Checking substring via Python ensures we never crash Qdrant over indexing issues.
+        filtered_results = []
+        for res in results:
+            payload = res.payload or {}
+            passed = True
+
+            for pf_field, pf_val in post_filters:
+                payload_val = str(payload.get(pf_field, "")).lower()
+                if pf_val not in payload_val:
+                    passed = False
+                    break
+
+            if passed:
+                filtered_results.append(res)
+
+            # Stop once we have top 10 matches
+            if len(filtered_results) >= 10:
+                break
 
         return {
             "status": "success",
-            "results": [{"id": p.id, "payload": p.payload} for p in points],
+            "results": [
+                {"id": p.id, "score": 1.0, "payload": p.payload}
+                for p in filtered_results
+            ],
+            "query_logic": filter_logic,
         }
 
     except Exception as e:
-        print(f"❌ Query Error: {e}")
+        print(f"❌ Text Search Error: {e}")
         return {"status": "error", "message": str(e)}
 
 
-groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-
-
 async def process_audio_search(file: UploadFile):
-    """
-    1. Transcribe Audio (Whisper-Large-V3) -> Text
-    2. Run Text Search (via existing process_text_query)
-    """
-    temp_filename = f"temp_audio_{file.filename}"
+    import whisper
 
-    # Save audio temporarily
+    temp_filename = f"temp_audio_{file.filename}"
     try:
         with open(temp_filename, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        print("🎙️ Transcribing audio (Multilingual)...")
-
-        # Open file in binary read mode
-        with open(temp_filename, "rb") as audio_file:
-            transcription = groq_client.audio.transcriptions.create(
-                file=audio_file,
-                model="whisper-large-v3",  # Multilingual model
-                response_format="json",
-                prompt="The audio may contain English or Hindi technical terms about farming.",
-            )
-
-        detected_text = transcription.text
-        print(f"📝 Heard: '{detected_text}'")
+        model = whisper.load_model("base")
+        result = model.transcribe(temp_filename)
+        detected_text = result["text"].strip()
 
         # This ensures we get the same RAG/Qdrant logic as text queries
         response_data = await process_text_query(detected_text)
@@ -556,33 +614,40 @@ async def process_audio_search(file: UploadFile):
             os.remove(temp_filename)
 
 
-async def parse_natural_language_query(query_text: str):
+async def process_ask_query(query: str, context: str, language: str):
     """
-    Uses the Supervisor (LangChain) to convert text into Qdrant filters.
+    Directly answers specific user questions from the frontend.
     """
-    system_prompt = """
-    You are a Database Translator.
-    Your goal: Convert natural language queries (English, Hindi, Hinglish, etc.) into a JSON filter object for a Hydroponic Database.
-    
-    AVAILABLE FIELDS:
-    - crop (e.g., Lettuce, Basil, Tomato)
-    - stage (e.g., Seedling, Vegetative, Flowering)
-    - outcome (Values: "Positive", "Negative", "Neutral")
-    
-    RULES:
-    1. TRANSLATION: Map "Tamatar" -> "Tomato", "Kharab" -> "Negative", "Badhiya" -> "Positive".
-    2. OUTPUT SCHEMA: { "must": [ {"key": "field", "match": "value"} ] }
-    3. If no filters apply, return { "must": [] }.
-    """
-
     try:
-        # instead of raw .chat.completions.create
+        lang_instr = (
+            "Respond entirely in Hindi."
+            if language == "hi"
+            else "Respond entirely in English."
+        )
+        system_prompt = f"""
+        You are Demeter Intelligence, an expert AI agronomist for a hydroponic farm.
+        Use this FARM DATA to answer the user's question:
+        {context}
+        
+        Wrap your reasoning in <thinking>...</thinking> tags.
+        CRITICAL: {lang_instr}
+        """
+
         response = supervisor.model.invoke(
-            [SystemMessage(content=system_prompt), HumanMessage(content=query_text)]
+            [SystemMessage(content=system_prompt), HumanMessage(content=query)]
         )
 
-        return extract_json(response.content)
+        raw_text = response.content
+        thinking = ""
+        answer = raw_text
 
+        think_match = re.search(r"<thinking>(.*?)</thinking>", raw_text, re.DOTALL)
+        if think_match:
+            thinking = think_match.group(1).strip()
+            answer = re.sub(
+                r"<thinking>.*?</thinking>", "", raw_text, flags=re.DOTALL
+            ).strip()
+
+        return {"status": "success", "thinking": thinking, "answer": answer}
     except Exception as e:
-        print(f"❌ Query Parse Error: {e}")
-        return {"must": []}
+        return {"status": "error", "message": str(e)}
