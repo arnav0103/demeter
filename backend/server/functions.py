@@ -751,7 +751,7 @@ async def process_similar_crops(crop_id: str, crop_name: str, payload_json: str)
             ]
         )
 
-        search_results = client.search(
+        search_results = client.query_points(
             collection_name=COLLECTION_NAME,
             query_vector=query_vector,
             query_filter=exclude_filter,

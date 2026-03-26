@@ -12,7 +12,7 @@ const en = {
   nav_crops_need_attention: "{n} crop{s} need attention",
   nav_all_clear: "All clear",
   nav_harvest_ready: "🌾 {n} ready to harvest",
-  sidebar_agri_ai: "AGRI·AI·v2",
+  sidebar_agri_ai: "AGRI·AI·v4",
   sidebar_connecting: "CONNECTING…",
   sidebar_farm_online: "FARM ONLINE",
   sidebar_no_data: "NO DATA",

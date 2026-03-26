@@ -1,39 +1,50 @@
-# --- Core Framework & Server ---
-fastapi>=0.109.0
-uvicorn[standard]>=0.27.0
-python-multipart>=0.0.9
-python-dotenv>=1.0.0
-pydantic>=2.6.0
-requests>=2.31.0
+# Core Framework & Server
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.12
+python-dotenv>=1.0.1
+pydantic>=2.9.0
+requests>=2.32.0
+httpx>=0.27.0
+aiofiles>=24.1.0
 
-# --- AI Orchestration (LangChain) ---
-langchain>=0.1.0
-langchain-core>=0.1.10
-langchain-openai>=0.0.5
-langgraph>=0.0.26
-langchain-community>=0.0.10
+# AI Orchestration
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0
+langgraph>=0.2.0
+langchain-community>=0.3.0
 
-# --- Database & Memory ---
-qdrant-client>=1.7.0
-mem0ai>=0.0.12
-fastembed>=0.2.0
+# Azure SDKs
+openai>=1.50.0
+azure-identity>=1.19.0
+azure-digitaltwins-core>=1.2.0
 
-# --- Computer Vision & Machine Learning ---
+# Vector Database & Memory
+qdrant-client>=1.12.0
+mem0ai>=0.1.0
+fastembed>=0.4.0
+
+# Computer Vision & Machine Learning
 numpy>=1.26.0
-torch>=2.2.0
-torchvision>=0.17.0
-opencv-python>=4.9.0.80
-Pillow>=10.2.0
+torch>=2.3.0
+torchvision>=0.18.0
+opencv-python>=4.10.0
+Pillow>=10.4.0
+ultralytics>=8.2.0
 
-# --- CLIP (OpenAI) ---
-# Required for Sentinel/Vision Encoders
-ftfy
-regex
-tqdm
+# CLIP (OpenAI)
+ftfy>=6.2.0
+regex>=2024.5.15
+tqdm>=4.66.0
 git+https://github.com/openai/CLIP.git
 
-# --- Utilities ---
-aiofiles>=23.2.1
-httpx>=0.26.0
-sentence_transformers
-openai-whisper
+# RAG / Document Ingestion
+pypdf>=4.3.0
+sentence-transformers>=3.0.0
+
+# Speech
+openai-whisper>=20231117
+
+# Utilities
+scipy>=1.13.0
