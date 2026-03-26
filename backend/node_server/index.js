@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-const { initDB } = require('./config/db');
+const { initDB, connectMongoDB } = require('./config/db');
 const farmRoutes = require('./routes/farmRoutes');
+const cropRoutes = require('./routes/cropRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -12,10 +13,12 @@ app.use(cors());
 
 // Initialize Database & Indexes
 initDB();
+connectMongoDB();
 
 // Mount Routes
 // All routes inside farmRoutes will be prefixed with /api
 app.use('/api', farmRoutes); 
+app.use('/api/crop', cropRoutes);
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);

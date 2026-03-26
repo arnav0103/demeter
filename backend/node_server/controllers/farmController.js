@@ -106,4 +106,6 @@ const getCropHistory = async (req, res) => {
     }
 };
 
+
+
 module.exports = { addMemory, getDashboard, getCropHistory };

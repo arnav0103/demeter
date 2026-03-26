@@ -1,9 +1,11 @@
 require('dotenv').config();
 const { QdrantClient } = require('@qdrant/js-client-rest');
+const {mongoose} = require('mongoose');
 
 const COLLECTION_NAME = 'Farm_Memory';
 
 // 1. Initialize Client with the Fix
+console.log("🔧 Initializing Qdrant Client...", process.env.QDRANT_URL);
 const client = new QdrantClient({
     url: process.env.QDRANT_URL,
     apiKey: process.env.QDRANT_API_KEY,
@@ -49,4 +51,14 @@ const initDB = async () => {
     }
 };
 
-module.exports = { client, initDB, COLLECTION_NAME };
+const connectMongoDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI, {
+        });
+        console.log("✅ Connected to MongoDB");
+    } catch (err) {
+        console.error("❌ MongoDB Connection Failed:", err.message);
+    }
+};
+
+module.exports = { client, initDB, connectMongoDB, COLLECTION_NAME };
