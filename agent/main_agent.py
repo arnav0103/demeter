@@ -4,7 +4,10 @@ import requests
 import time
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load env from root
+current_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(current_dir, "..", ".env")
+load_dotenv(env_path)
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
@@ -19,6 +22,7 @@ from sub_agents.Supervisor import SupervisorAgent
 SIMULATOR_ACTION_URL = os.getenv(
     "SIMULATOR_ACTION_URL", "http://localhost:8001/simulation/action"
 )
+
 
 def main():
     print("🚀 Initializing Demeter Orchestrator...")
@@ -63,7 +67,7 @@ def main():
             time.sleep(1)
             strat_name, strat_instr, action_idx = supervisor.get_strategic_goal(fmu)
             print(f"\n🎰 BANDIT STRATEGY: {strat_name}")
-            
+
             crop = fmu.metadata.get("crop", "unknown")
             stage = fmu.metadata.get("stage", "unknown")
             query = f"optimal hydroponic conditions for {crop} in {stage} stage"
@@ -100,10 +104,7 @@ def main():
                 strategy_info=(strat_name, strat_instr, action_idx),
             )
 
-            batch_actions.append({
-                "crop_id": crop_id,
-                "action": final_action
-            })
+            batch_actions.append({"crop_id": crop_id, "action": final_action})
 
             print(f"\n✅ Final Action for {crop_id}: {final_action}")
         try:
@@ -115,6 +116,7 @@ def main():
 
         print("\nzzz Sleeping 2 minutes...")
         time.sleep(120)
+
 
 if __name__ == "__main__":
     main()

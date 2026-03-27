@@ -39,7 +39,7 @@ Built for the **Microsoft AI Unlocked - AI for India** hackathon, Demeter addres
   - `Knowledge_Base` - agronomic research documents (RAG)
   - `Plant_Biographies_HF` - long-term per-crop memory (via Mem0)
 - **Mem0** - semantic plant biography system backed by Azure OpenAI
-- **Node.js + MongoDB** - structured crop metadata and event logs
+- **NodeJS + MongoDB** - structured crop metadata and event logs
 
 ### Physics Simulator
 
@@ -276,7 +276,7 @@ demeter/
 ### Prerequisites
 
 - Python 3.10+
-- Node.js 18+
+- NodeJS 18+
 - A running [Qdrant](https://qdrant.tech/) instance (local Docker or Qdrant Cloud)
 - Azure OpenAI resource with GPT-4.1 deployment
 - (Optional) Azure Digital Twins instance
@@ -321,10 +321,13 @@ SIMULATOR_PORT=8001
 # Azure Digital Twins
 ADT_URL=your-adt-instance.digitaltwins.azure.net
 
+# Backend
+PORT=3001
+MONGODB_URI=your_mongodb_url
+
 # Frontend
 REACT_APP_AGENT_API_URL=http://localhost:8000
 REACT_APP_FARM_API_URL=http://localhost:3001/api
-PORT=3001
 ```
 
 ### 3. Start Qdrant Database
@@ -361,8 +364,7 @@ Otherwise, download [model_bandit_greedy.pkl](https://drive.google.com/file/d/1s
 ### 6. Start the Simulator
 
 ```bash
-cd simulator
-python main.py
+python simulator/main.py
 # Runs on http://localhost:8001
 ```
 
@@ -372,10 +374,9 @@ Download [plant_disease_model.pt](https://drive.google.com/file/d/1NkdGt0CFS7tx4
 
 ```bash
 # Python FastAPI server
-cd backend/server
-uvicorn main:app --reload --port 8000
+python backend/server/main.py
 
-# Node.js Express server
+# NodeJS Express server
 cd backend/node_server
 npm install && npm start
 ```
@@ -397,4 +398,4 @@ python agent/main_agent.py
 
 ---
 
-**Made with ❤️ for the future of sustainable agriculture**
+<center>Made with ❤️ for the future of sustainable agriculture</center>

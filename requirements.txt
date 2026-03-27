@@ -48,3 +48,4 @@ openai-whisper>=20231117
 
 # Utilities
 scipy>=1.13.0
+pymongo>=4.16.0
