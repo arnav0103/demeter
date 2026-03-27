@@ -327,7 +327,7 @@ function RelatedCropCard({ item, score, t, td }) {
               marginTop: 2,
             }}
           >
-            {p.crop_id || "—"} · Seq #{p.sequence_number || 1}
+            {p.crop_id || "-"} · Seq #{p.sequence_number || 1}
           </div>
         </div>
         <div
@@ -473,7 +473,7 @@ function InsightCard({ result, idx, t, td }) {
               marginTop: 2,
             }}
           >
-            {p.crop_id || "—"} · Seq #{p.sequence_number || 1}
+            {p.crop_id || "-"} · Seq #{p.sequence_number || 1}
           </div>
         </div>
         <div
@@ -979,7 +979,7 @@ export default function FarmIntelligence() {
 - Crop: ${p.crop || cropCtx.crop}
 - Batch ID: ${p.crop_id || cropCtx.cropId}
 - Growth Stage: ${p.stage || "Unknown"}
-- Sequence Number: ${p.sequence_number || "—"}
+- Sequence Number: ${p.sequence_number || "-"}
 - Last Updated: ${p.timestamp ? new Date(p.timestamp).toLocaleString() : "Unknown"}
 LATEST SENSOR READINGS:
 - pH: ${sensors.ph}
@@ -1104,7 +1104,7 @@ SYSTEM: Hydroponic multi-crop farm management system (Demeter).`.trim();
       setTranscription("");
 
       try {
-        // Build the search payload — include selectedCrop context so backend
+        // Build the search payload - include selectedCrop context so backend
         // can bias Qdrant filter results toward that crop's embedding
         const data = await agentService.queryText(query, selectedCrop?.cropId);
 

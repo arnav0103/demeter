@@ -10,6 +10,7 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  Shield,
 } from "lucide-react";
 import { useFarmData } from "../hooks/useFarmData";
 import { deriveCropStatus, isReadyToHarvest } from "../utils/dataUtils";
@@ -26,14 +27,18 @@ export default function Sidebar() {
   const alertCount = useMemo(() => {
     if (!dashboard?.length) return 0;
     return dashboard.filter((d) => {
-      const status = deriveCropStatus(d.payload);
+      const payload = d.payload || d;
+      const status = deriveCropStatus(payload);
       return status === "Critical" || status === "Attention";
     }).length;
   }, [dashboard]);
 
   const harvestCount = useMemo(() => {
     if (!dashboard?.length) return 0;
-    return dashboard.filter((d) => isReadyToHarvest(d.payload)).length;
+    return dashboard.filter((d) => {
+      const payload = d.payload || d;
+      return isReadyToHarvest(payload);
+    }).length;
   }, [dashboard]);
 
   const totalBadge = alertCount + harvestCount;
@@ -266,23 +271,23 @@ export default function Sidebar() {
                         color: "var(--amber)",
                       }}
                     >
-                      🌾 {harvest}
+                      🌾{harvest}
                     </span>
                   )}
                 </div>
               )}
-              {/* Badge (collapsed) */}
+
               {badge && collapsed && (
                 <span
                   className="alert-pulse"
                   style={{
                     position: "absolute",
-                    top: 4,
-                    right: 4,
-                    width: 7,
-                    height: 7,
+                    top: 6,
+                    right: 6,
+                    width: 8,
+                    height: 8,
                     borderRadius: "50%",
-                    background: alertCount > 0 ? "var(--red)" : "var(--amber)",
+                    background: "var(--red)",
                   }}
                 />
               )}
@@ -291,145 +296,80 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Alert / harvest status */}
-      {!collapsed && (
-        <div style={{ padding: "0 12px 12px" }}>
-          <div
-            style={{
-              padding: "10px 12px",
-              borderRadius: 10,
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-            }}
-          >
-            <div
-              className="section-label"
-              style={{ margin: 0, marginBottom: 6, fontSize: 9 }}
-            >
-              {t("nav_alert_status")}
-            </div>
-
-            {/* Harvest ready row */}
-            {harvestCount > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  marginBottom: alertCount > 0 ? 5 : 0,
-                }}
-              >
-                <span
-                  className="harvest-pulse"
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: "var(--amber)",
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontFamily: "DM Mono, monospace",
-                    color: "var(--amber)",
-                  }}
-                >
-                  {t("nav_harvest_ready", { n: harvestCount })}
-                </span>
-              </div>
-            )}
-
-            {alertCount > 0 ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span
-                  className="alert-pulse"
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: "var(--red)",
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontFamily: "DM Mono, monospace",
-                    color: "var(--red)",
-                  }}
-                >
-                  {t("nav_crops_need_attention", {
-                    n: alertCount,
-                    s: alertCount !== 1 ? "s" : "",
-                  })}
-                </span>
-              </div>
-            ) : harvestCount === 0 ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span
-                  className="status-dot"
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: "var(--green)",
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontFamily: "DM Mono, monospace",
-                    color: "var(--green)",
-                  }}
-                >
-                  {t("nav_all_clear")}
-                </span>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      )}
-
-      {/* User row */}
+      {/* User avatar */}
       <div
         style={{
-          padding: collapsed ? "12px 8px" : "12px 12px",
           borderTop: "1px solid var(--border)",
+          padding: collapsed ? "12px 0" : "12px",
           display: "flex",
           alignItems: "center",
-          gap: 8,
+          gap: 10,
           justifyContent: collapsed ? "center" : "flex-start",
         }}
       >
+        {/* Avatar */}
         <div
           style={{
-            width: 28,
-            height: 28,
+            width: 34,
+            height: 34,
             borderRadius: "50%",
-            background: "rgba(245,158,11,0.15)",
-            color: "var(--amber)",
+            background: "linear-gradient(135deg, #2d7a44, #4ade80)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 11,
-            fontWeight: 700,
             flexShrink: 0,
+            fontSize: 12,
+            fontWeight: 700,
+            color: "#fff",
+            letterSpacing: "0.05em",
+            boxShadow: "0 2px 6px rgba(74,222,128,0.3)",
           }}
         >
           {initials}
         </div>
+
         {!collapsed && (
-          <div>
+          <div
+            style={{
+              minWidth: 0,
+              flex: 1,
+              animation: "fadeSlideIn 200ms ease",
+            }}
+          >
             <div
-              style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "var(--text)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
             >
               {settings.userName}
             </div>
-            <div style={{ fontSize: 10, color: "var(--text-3)" }}>
-              {settings.userDesignation}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                marginTop: 1,
+              }}
+            >
+              <Shield
+                size={9}
+                style={{ color: "var(--green)", flexShrink: 0 }}
+              />
+              <span
+                style={{
+                  fontSize: 10,
+                  fontFamily: "DM Mono, monospace",
+                  color: "var(--green)",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {settings.userDesignation}
+              </span>
             </div>
           </div>
         )}

@@ -701,9 +701,9 @@ export default function Analytics() {
                         fontWeight: 600,
                       }}
                     >
-                      {p.crop_id || "—"}
+                      {p.crop_id || "-"}
                     </td>
-                    <td>{td(p.crop) || "—"}</td>
+                    <td>{td(p.crop) || "-"}</td>
                     <td
                       style={{
                         color: "var(--text-3)",
@@ -711,7 +711,7 @@ export default function Analytics() {
                         fontFamily: "DM Mono, monospace",
                       }}
                     >
-                      {td(p.stage) || "—"}
+                      {td(p.stage) || "-"}
                     </td>
                     <td>
                       <span

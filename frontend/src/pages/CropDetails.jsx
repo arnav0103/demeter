@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchCropDetails } from "../api/farmApi";
+import { fetchCropDetails, fetchCropById } from "../api/farmApi";
 import {
   ArrowLeft,
   Thermometer,
@@ -11,6 +11,14 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  MapPin,
+  Calendar,
+  Clock,
+  ChevronRight,
+  Cpu,
+  StickyNote,
+  Play,
+  Leaf,
 } from "lucide-react";
 import {
   AreaChart,
@@ -27,6 +35,11 @@ import {
   extractSensors,
   parsePythonString,
   formatNumber,
+  calculateMaturity,
+  getDaysRemaining,
+  getCurrentStage,
+  CROP_LIFECYCLES,
+  CROP_CYCLE_HOURS,
 } from "../utils/dataUtils";
 import {
   AgentActionWidget,
@@ -41,6 +54,8 @@ import {
 } from "../components/ui";
 import { useSettings } from "../hooks/useSettings";
 import { useT } from "../hooks/useTranslation";
+
+// Sub-components
 
 function StatBox({ icon: Icon, label, value, color, unit }) {
   return (
@@ -392,7 +407,547 @@ function ExplanationLogBlock({ log, t, td }) {
   );
 }
 
-const TABS = ["details_tab_overview", "details_tab_sensors", "details_tab_log"];
+function InfoTab({ cropDoc, cropId, navigate, t }) {
+  if (!cropDoc) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 48,
+        }}
+      >
+        <span
+          style={{
+            fontSize: 13,
+            fontFamily: "DM Mono, monospace",
+            color: "var(--text-3)",
+          }}
+        >
+          No metadata available yet - run the first cycle to populate data.
+        </span>
+      </div>
+    );
+  }
+
+  const maturity = calculateMaturity(cropDoc);
+  const daysLeft = getDaysRemaining(cropDoc);
+  const stage = getCurrentStage(cropDoc) || cropDoc.stage || "seedling";
+  const cycleH =
+    cropDoc.cycle_duration_hours ||
+    CROP_CYCLE_HOURS[(cropDoc.crop || "").toLowerCase()] ||
+    1;
+  const lifecycle = CROP_LIFECYCLES[(cropDoc.crop || "").toLowerCase()];
+
+  const plantedDate = cropDoc.planted_at
+    ? new Date(cropDoc.planted_at).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : "-";
+  const daysSince = cropDoc.planted_at
+    ? Math.floor(
+        (Date.now() - new Date(cropDoc.planted_at).getTime()) / 86400000,
+      )
+    : null;
+
+  const sensorIds = cropDoc.sensor_ids || {};
+  const SENSORS_DISPLAY = [
+    {
+      label: "pH Sensor",
+      id: sensorIds.ph_sensor || "PH-SEN-????",
+      color: "var(--green)",
+    },
+    {
+      label: "EC Sensor",
+      id: sensorIds.ec_sensor || "EC-SEN-????",
+      color: "var(--amber)",
+    },
+    {
+      label: "Temp Sensor",
+      id: sensorIds.temp_sensor || "TMP-SEN-????",
+      color: "var(--blue)",
+    },
+    {
+      label: "Humidity Sensor",
+      id: sensorIds.humidity_sensor || "HUM-SEN-????",
+      color: "#a78bfa",
+    },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Crop header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          padding: 20,
+          borderRadius: 16,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+        }}
+      >
+        <div
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 16,
+            background: "rgba(74,222,128,0.1)",
+            border: "1px solid rgba(74,222,128,0.25)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Leaf size={28} style={{ color: "var(--green)" }} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: 18,
+              color: "var(--text)",
+              marginBottom: 4,
+            }}
+          >
+            {cropDoc.crop}
+          </div>
+          <div
+            style={{
+              fontSize: 11,
+              fontFamily: "DM Mono, monospace",
+              color: "var(--text-3)",
+            }}
+          >
+            {cropId}
+          </div>
+          <div
+            style={{
+              marginTop: 8,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 10,
+                fontFamily: "DM Mono, monospace",
+                padding: "2px 10px",
+                borderRadius: 20,
+                background: "rgba(74,222,128,0.12)",
+                border: "1px solid rgba(74,222,128,0.3)",
+                color: "var(--green)",
+                textTransform: "capitalize",
+              }}
+            >
+              {stage}
+            </span>
+            {cycleH && (
+              <span
+                style={{
+                  fontSize: 10,
+                  fontFamily: "DM Mono, monospace",
+                  color: "var(--text-3)",
+                }}
+              >
+                {t("details_hours_per_cycle", { n: cycleH })}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Details grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {[
+          {
+            icon: Calendar,
+            label: t("details_planted"),
+            value: plantedDate,
+            color: "var(--blue)",
+          },
+          {
+            icon: Clock,
+            label: t("details_cycle_duration"),
+            value: `${cycleH}h / cycle`,
+            color: "var(--green)",
+          },
+          {
+            icon: Leaf,
+            label: t("details_lifecycle_progress"),
+            value: `${maturity}%`,
+            color: "var(--amber)",
+          },
+          {
+            icon: MapPin,
+            label: t("details_location"),
+            value: cropDoc.location || "-",
+            color: "var(--text-2)",
+          },
+        ].map(({ icon, label, value, color }) => (
+          <div
+            key={label}
+            style={{
+              padding: "14px 16px",
+              borderRadius: 12,
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 7,
+                marginBottom: 8,
+              }}
+            >
+              {React.createElement(icon, { size: 12, style: { color } })}
+              <span
+                style={{
+                  fontSize: 10,
+                  fontFamily: "DM Mono, monospace",
+                  color: "var(--text-3)",
+                }}
+              >
+                {label}
+              </span>
+            </div>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color,
+                fontFamily: "DM Mono, monospace",
+              }}
+            >
+              {value}
+            </div>
+          </div>
+        ))}
+
+        {/* Days since / remaining */}
+        <div
+          style={{
+            padding: "14px 16px",
+            borderRadius: 12,
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              fontFamily: "DM Mono, monospace",
+              color: "var(--text-3)",
+              marginBottom: 8,
+            }}
+          >
+            {t("details_days_since", { n: daysSince ?? "-" })}
+          </div>
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 700,
+              fontFamily: "DM Mono, monospace",
+              color: "var(--text-2)",
+            }}
+          >
+            {daysLeft !== null
+              ? t("details_days_remain", { n: daysLeft })
+              : "-"}
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: "14px 16px",
+            borderRadius: 12,
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              fontFamily: "DM Mono, monospace",
+              color: "var(--text-3)",
+              marginBottom: 8,
+            }}
+          >
+            {t("details_total_sequences")}
+          </div>
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              fontFamily: "DM Mono, monospace",
+              color: "var(--text)",
+            }}
+          >
+            {cropDoc.sequence_number || 0}
+          </div>
+        </div>
+      </div>
+
+      {/* Lifecycle progress bar */}
+      {lifecycle && (
+        <div
+          style={{
+            padding: 16,
+            borderRadius: 14,
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              fontFamily: "DM Mono, monospace",
+              color: "var(--text-3)",
+              marginBottom: 10,
+            }}
+          >
+            {t("details_lifecycle_progress")} - {lifecycle.totalDays} days total
+          </div>
+          <div
+            style={{
+              height: 8,
+              borderRadius: 4,
+              background: "var(--border)",
+              overflow: "hidden",
+              marginBottom: 8,
+            }}
+          >
+            <div
+              style={{
+                width: `${maturity}%`,
+                height: "100%",
+                borderRadius: 4,
+                background: maturity >= 80 ? "var(--amber)" : "var(--green)",
+                transition: "width 0.4s",
+              }}
+            />
+          </div>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            {lifecycle.stages.map((s, i) => {
+              const colors = [
+                "var(--text-3)",
+                "var(--green)",
+                "var(--amber)",
+                "var(--red)",
+              ];
+              return (
+                <div
+                  key={s.name}
+                  style={{ display: "flex", alignItems: "center", gap: 5 }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: colors[i % colors.length],
+                      display: "inline-block",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontFamily: "DM Mono, monospace",
+                      color: "var(--text-3)",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {s.name} (
+                    {s.endH
+                      ? `${Math.round((s.endH - s.startH) / 24)}d`
+                      : "harvest"}
+                    )
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Sensor Hardware */}
+      <div
+        style={{
+          borderRadius: 14,
+          overflow: "hidden",
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+        }}
+      >
+        <div
+          style={{
+            padding: "12px 16px",
+            borderBottom: "1px solid var(--border)",
+            background: "var(--bg-3)",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <Cpu size={13} style={{ color: "var(--text-3)" }} />
+          <span
+            style={{
+              fontSize: 10,
+              fontFamily: "DM Mono, monospace",
+              color: "var(--text-3)",
+              letterSpacing: "0.08em",
+            }}
+          >
+            {t("details_sensor_hardware")}
+          </span>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 1,
+            background: "var(--border)",
+          }}
+        >
+          {SENSORS_DISPLAY.map(({ label, id, color }) => (
+            <div
+              key={label}
+              style={{ padding: "14px 16px", background: "var(--surface)" }}
+            >
+              <div
+                style={{
+                  fontSize: 10,
+                  fontFamily: "DM Mono, monospace",
+                  color: "var(--text-3)",
+                  marginBottom: 6,
+                }}
+              >
+                {label}
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontFamily: "DM Mono, monospace",
+                  fontWeight: 700,
+                  color,
+                  marginBottom: 4,
+                }}
+              >
+                {id}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span
+                  style={{
+                    width: 5,
+                    height: 5,
+                    borderRadius: "50%",
+                    background: "var(--green)",
+                    display: "inline-block",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 9,
+                    fontFamily: "DM Mono, monospace",
+                    color: "var(--green)",
+                  }}
+                >
+                  {t("details_sensor_online")}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Notes */}
+      {cropDoc.notes && (
+        <div
+          style={{
+            padding: 16,
+            borderRadius: 14,
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 10,
+            }}
+          >
+            <StickyNote size={13} style={{ color: "var(--text-3)" }} />
+            <span
+              style={{
+                fontSize: 10,
+                fontFamily: "DM Mono, monospace",
+                color: "var(--text-3)",
+              }}
+            >
+              {t("details_notes")}
+            </span>
+          </div>
+          <p
+            style={{
+              fontSize: 13,
+              color: "var(--text-2)",
+              lineHeight: 1.7,
+              margin: 0,
+              fontFamily: "DM Mono, monospace",
+            }}
+          >
+            {cropDoc.notes}
+          </p>
+        </div>
+      )}
+
+      {/* Run Cycle CTA */}
+      <button
+        onClick={() => navigate(`/run-cycle/${cropId}`)}
+        style={{
+          padding: "14px 20px",
+          borderRadius: 12,
+          background: "var(--green)",
+          border: "none",
+          color: "var(--btn-on-green)",
+          fontWeight: 700,
+          fontSize: 14,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          marginBottom: 8,
+        }}
+      >
+        <Play size={15} />
+        {t("details_run_cycle_btn")}
+        <ChevronRight size={14} />
+      </button>
+    </div>
+  );
+}
+
+// Tabs
+
+const TABS = [
+  "details_tab_info",
+  "details_tab_overview",
+  "details_tab_sensors",
+  "details_tab_log",
+];
+
+// MAIN
 
 export default function CropDetails() {
   const { cropId } = useParams();
@@ -403,13 +958,24 @@ export default function CropDetails() {
 
   const [history, setHistory] = useState([]);
   const [latest, setLatest] = useState(null);
+  const [cropDoc, setCropDoc] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("details_tab_overview");
+  const [activeTab, setActiveTab] = useState("details_tab_info");
 
   useEffect(() => {
-    fetchCropDetails(cropId).then((data) => {
-      if (data?.length) {
-        const sorted = [...data].sort(
+    let cancelled = false;
+    setLoading(true);
+
+    Promise.all([
+      // Qdrant history
+      fetchCropDetails(cropId),
+      // MongoDB doc
+      fetchCropById(cropId),
+    ]).then(([histData, mongoDoc]) => {
+      if (cancelled) return;
+
+      if (histData?.length) {
+        const sorted = [...histData].sort(
           (a, b) =>
             (a.payload?.sequence_number || 0) -
             (b.payload?.sequence_number || 0),
@@ -422,8 +988,14 @@ export default function CropDetails() {
         setHistory(processed);
         setLatest(processed[processed.length - 1]);
       }
+
+      if (mongoDoc) setCropDoc(mongoDoc);
       setLoading(false);
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [cropId]);
 
   if (loading)
@@ -450,7 +1022,7 @@ export default function CropDetails() {
       </PageShell>
     );
 
-  if (!latest)
+  if (!latest && !cropDoc)
     return (
       <div
         style={{
@@ -464,8 +1036,8 @@ export default function CropDetails() {
       </div>
     );
 
-  const p = latest.payload || {};
-  const sensors = latest.cleanSensors || {};
+  const p = latest?.payload || {};
+  const sensors = latest?.cleanSensors || {};
 
   const chartData = history.map((h) => ({
     t: h.payload?.timestamp
@@ -480,6 +1052,9 @@ export default function CropDetails() {
     humidity: formatNumber(h.cleanSensors?.humidity),
   }));
 
+  const displayCrop = cropDoc?.crop || p.crop || t("common_unknown");
+  const displayStage = cropDoc?.stage || p.stage || "";
+
   return (
     <PageShell>
       {/* Header */}
@@ -490,19 +1065,15 @@ export default function CropDetails() {
 
         <div>
           <h1 className="page-title">
-            {td(p.crop) || t("common_unknown")}{" "}
+            {td(displayCrop)}{" "}
             <span
-              style={{
-                color: "var(--text-3)",
-                fontWeight: 400,
-                fontSize: 16,
-              }}
+              style={{ color: "var(--text-3)", fontWeight: 400, fontSize: 16 }}
             >
               #{p.sequence_number || 0}
             </span>
           </h1>
           <p className="page-subtitle">
-            {cropId} · {td(p.stage)}
+            {cropId} · {td(displayStage)}
           </p>
         </div>
 
@@ -534,7 +1105,14 @@ export default function CropDetails() {
         </div>
 
         {/* Tabs */}
-        <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+        <div
+          style={{
+            marginLeft: "auto",
+            display: "flex",
+            gap: 4,
+            flexWrap: "wrap",
+          }}
+        >
           {TABS.map((tab) => (
             <button
               key={tab}
@@ -569,6 +1147,17 @@ export default function CropDetails() {
           gap: 20,
         }}
       >
+        {/* Info Tab */}
+        {activeTab === "details_tab_info" && (
+          <InfoTab
+            cropDoc={cropDoc}
+            cropId={cropId}
+            navigate={navigate}
+            t={t}
+          />
+        )}
+
+        {/* Overview Tab */}
         {activeTab === "details_tab_overview" && (
           <>
             {/* Sensor stats */}
@@ -696,6 +1285,7 @@ export default function CropDetails() {
           </>
         )}
 
+        {/* Sensors Tab */}
         {activeTab === "details_tab_sensors" && (
           <>
             <div
@@ -815,6 +1405,7 @@ export default function CropDetails() {
           </>
         )}
 
+        {/* Log Tab */}
         {activeTab === "details_tab_log" && (
           <div
             style={{
@@ -928,26 +1519,10 @@ function LogRow({ h, i, logLimit, t, td, formatNumber, logDotColor }) {
         >
           #{h.payload?.sequence_number || i}
         </span>
-
-        {/* Sensor snapshot */}
-        <div
-          style={{
-            display: "flex",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           {[
-            {
-              label: "pH",
-              value: h.cleanSensors?.ph,
-              color: "var(--green)",
-            },
-            {
-              label: "EC",
-              value: h.cleanSensors?.ec,
-              color: "var(--amber)",
-            },
+            { label: "pH", value: h.cleanSensors?.ph, color: "var(--green)" },
+            { label: "EC", value: h.cleanSensors?.ec, color: "var(--amber)" },
             {
               label: "T",
               value: h.cleanSensors?.temp + "°",
@@ -969,12 +1544,7 @@ function LogRow({ h, i, logLimit, t, td, formatNumber, logDotColor }) {
                 gap: 3,
               }}
             >
-              <span
-                style={{
-                  color: "var(--text-3)",
-                  fontSize: 11,
-                }}
-              >
+              <span style={{ color: "var(--text-3)", fontSize: 11 }}>
                 {label}
               </span>
               <span style={{ color, fontWeight: 700 }}>
@@ -1046,7 +1616,7 @@ function LogRow({ h, i, logLimit, t, td, formatNumber, logDotColor }) {
               marginBottom: 8,
             }}
           >
-            <Brain size={9} style={{ display: "inline", marginRight: 5 }} />{" "}
+            <Brain size={9} style={{ display: "inline", marginRight: 5 }} />
             {t("details_ai_reasoning")}
           </div>
           <pre

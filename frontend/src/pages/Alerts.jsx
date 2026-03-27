@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
   Scissors,
   RotateCcw,
+  Leaf,
 } from "lucide-react";
 import { useFarmData } from "../hooks/useFarmData";
 import { generateAlerts } from "../utils/dataUtils";
@@ -52,9 +53,9 @@ const SEV = {
 
 const HARVEST_STYLE = {
   icon: Scissors,
-  bg: "rgba(245,158,11,0.12)",
-  border: "rgba(245,158,11,0.35)",
-  text: "var(--amber)",
+  bg: "rgba(74,222,128,0.1)",
+  border: "rgba(74,222,128,0.3)",
+  text: "var(--green)",
   labelKey: "alerts_severity_harvest",
 };
 
@@ -67,9 +68,21 @@ const AGENT_COLORS = {
   HISTORIAN: "var(--text-3)",
 };
 
-function AlertCard({ alert, onAck, onUnack, onDismiss, t, td }) {
-  const style = alert.isHarvestAlert ? HARVEST_STYLE : SEV[alert.severity];
-  const Icon = style.icon;
+function AlertCard({ alert, onAck, onUnack, onDismiss, t }) {
+  const style = alert.isHarvestAlert
+    ? HARVEST_STYLE
+    : SEV[alert.severity] || SEV.info;
+  const Icon = style.icon || Info;
+
+  // Friendly agent label
+  const agentLabel = alert.agent
+    ? alert.agent.charAt(0) + alert.agent.slice(1).toLowerCase() + " Agent"
+    : "System";
+
+  const cropDisplay =
+    alert.crop && alert.crop !== "Unknown Crop"
+      ? alert.crop
+      : alert.cropId || "Unknown";
 
   return (
     <div
@@ -84,12 +97,12 @@ function AlertCard({ alert, onAck, onUnack, onDismiss, t, td }) {
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-        {/* Icon */}
+        {/* Severity icon */}
         <div
           style={{
-            width: 32,
-            height: 32,
-            borderRadius: 8,
+            width: 34,
+            height: 34,
+            borderRadius: 10,
             background: style.bg,
             border: `1px solid ${style.border}`,
             display: "flex",
@@ -99,17 +112,19 @@ function AlertCard({ alert, onAck, onUnack, onDismiss, t, td }) {
             marginTop: 2,
           }}
         >
-          <Icon size={14} style={{ color: style.text }} />
+          <Icon size={15} style={{ color: style.text }} />
         </div>
 
         {/* Content */}
         <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Title row */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8,
+              gap: 7,
               flexWrap: "wrap",
+              marginBottom: 4,
             }}
           >
             <span
@@ -117,50 +132,66 @@ function AlertCard({ alert, onAck, onUnack, onDismiss, t, td }) {
                 fontWeight: 600,
                 fontSize: 13,
                 color: alert.ack ? "var(--text-2)" : "var(--text)",
+                lineHeight: 1.3,
               }}
             >
               {alert.title}
             </span>
+
+            {/* Severity badge */}
             <span
               style={{
                 fontSize: 9,
                 fontFamily: "DM Mono, monospace",
-                padding: "2px 6px",
+                padding: "2px 7px",
                 borderRadius: 4,
                 background: style.bg,
                 color: style.text,
                 border: `1px solid ${style.border}`,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
               }}
             >
               {t(style.labelKey)}
             </span>
+
+            {/* Agent badge */}
             <span
               style={{
                 fontSize: 9,
                 fontFamily: "DM Mono, monospace",
-                padding: "2px 6px",
+                padding: "2px 7px",
                 borderRadius: 4,
                 background: "var(--bg-3)",
                 color: AGENT_COLORS[alert.agent] || "var(--text-3)",
                 border: "1px solid var(--border)",
               }}
             >
-              {td(alert.agent)}
+              {agentLabel}
             </span>
           </div>
 
+          {/* Description */}
           <p
             style={{
               fontSize: 12,
-              color: "var(--text-3)",
-              margin: "4px 0 8px",
-              lineHeight: 1.5,
+              color: "var(--text-2)",
+              margin: "0 0 8px",
+              lineHeight: 1.6,
             }}
           >
-            {td(alert.desc)}
+            {alert.desc}
           </p>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Meta row: time + crop */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
             <span
               style={{
                 display: "flex",
@@ -171,21 +202,32 @@ function AlertCard({ alert, onAck, onUnack, onDismiss, t, td }) {
                 color: "var(--text-3)",
               }}
             >
-              <Clock size={9} /> {alert.time}
+              <Clock size={9} />
+              {alert.time}
             </span>
+
             <span
               style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
                 fontSize: 10,
                 fontFamily: "DM Mono, monospace",
                 color: "var(--text-3)",
               }}
             >
-              {t("alerts_crop_label", { crop: td(alert.crop) })}
+              <Leaf size={9} style={{ color: "var(--green)" }} />
+              <span style={{ color: "var(--text-2)", fontWeight: 500 }}>
+                {cropDisplay}
+              </span>
+              {alert.cropId && alert.cropId !== cropDisplay && (
+                <span style={{ opacity: 0.55 }}>· {alert.cropId}</span>
+              )}
             </span>
           </div>
         </div>
 
-        {/* Actions */}
+        {/* Action buttons */}
         <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
           {!alert.ack ? (
             <button
@@ -202,6 +244,7 @@ function AlertCard({ alert, onAck, onUnack, onDismiss, t, td }) {
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
+                transition: "background 150ms, color 150ms",
               }}
             >
               <CheckCircle2 size={13} />
@@ -305,14 +348,16 @@ export default function Alerts() {
     [alerts, filter, showAcked],
   );
 
-  // Filters
+  const unackedList = filtered.filter((a) => !a.ack);
+  const ackedList = filtered.filter((a) => a.ack);
+
   const FILTER_OPTIONS = [
-    { key: "all", label: t("common_all"), count: alerts.length, color: null },
+    { key: "all", label: t("common_all"), count: counts.total, color: null },
     {
       key: "harvest",
       label: t("alerts_filter_harvest"),
       count: counts.harvest,
-      color: "var(--amber)",
+      color: "var(--green)",
     },
     {
       key: "critical",
@@ -455,14 +500,7 @@ export default function Alerts() {
       {/* Alert list */}
       <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
         {loading ? (
-          <div
-            style={{
-              maxWidth: 640,
-              margin: "0 auto",
-            }}
-          >
-            <LoadingShimmer count={3} height={80} />
-          </div>
+          <LoadingShimmer count={3} height={80} />
         ) : filtered.length === 0 ? (
           <EmptyState
             icon={CheckCircle2}
@@ -475,79 +513,84 @@ export default function Alerts() {
         ) : (
           <div
             style={{
-              maxWidth: 640,
-              margin: "0 auto",
               display: "flex",
               flexDirection: "column",
               gap: 24,
             }}
           >
-            {/* Unacked */}
-            {filtered.filter((a) => !a.ack).length > 0 && (
+            {/* Active (unacknowledged) */}
+            {unackedList.length > 0 && (
               <div>
                 <div
                   style={{
                     fontSize: 10,
                     fontFamily: "DM Mono, monospace",
                     color: "var(--text-3)",
-                    marginBottom: 12,
+                    marginBottom: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
                   }}
                 >
-                  {t("alerts_unacked", {
-                    n: filtered.filter((a) => !a.ack).length,
-                  })}
+                  <span
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "var(--red)",
+                      display: "inline-block",
+                    }}
+                  />
+                  {t("alerts_unacked", { n: unackedList.length })}
+                  <span style={{ marginLeft: "auto", opacity: 0.5 }}>
+                    newest first
+                  </span>
                 </div>
                 <div
                   style={{ display: "flex", flexDirection: "column", gap: 8 }}
                 >
-                  {filtered
-                    .filter((a) => !a.ack)
-                    .map((a) => (
-                      <AlertCard
-                        key={a.id}
-                        alert={a}
-                        onAck={ack}
-                        onUnack={unack}
-                        onDismiss={dismiss}
-                        t={t}
-                        td={td}
-                      />
-                    ))}
+                  {unackedList.map((a) => (
+                    <AlertCard
+                      key={a.id}
+                      alert={a}
+                      onAck={ack}
+                      onUnack={unack}
+                      onDismiss={dismiss}
+                      t={t}
+                      td={td}
+                    />
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* Acked */}
-            {showAcked && filtered.filter((a) => a.ack).length > 0 && (
+            {/* Acknowledged */}
+            {showAcked && ackedList.length > 0 && (
               <div>
                 <div
                   style={{
                     fontSize: 10,
                     fontFamily: "DM Mono, monospace",
                     color: "var(--text-3)",
-                    marginBottom: 12,
+                    marginBottom: 10,
                   }}
                 >
-                  {t("alerts_acknowledged", {
-                    n: filtered.filter((a) => a.ack).length,
-                  })}
+                  {t("alerts_acked", { n: ackedList.length })}
                 </div>
                 <div
                   style={{ display: "flex", flexDirection: "column", gap: 8 }}
                 >
-                  {filtered
-                    .filter((a) => a.ack)
-                    .map((a) => (
-                      <AlertCard
-                        key={a.id}
-                        alert={a}
-                        onAck={ack}
-                        onUnack={unack}
-                        onDismiss={dismiss}
-                        t={t}
-                        td={td}
-                      />
-                    ))}
+                  {ackedList.map((a) => (
+                    <AlertCard
+                      key={a.id}
+                      alert={a}
+                      onAck={ack}
+                      onUnack={unack}
+                      onDismiss={dismiss}
+                      t={t}
+                      td={td}
+                    />
+                  ))}
                 </div>
               </div>
             )}

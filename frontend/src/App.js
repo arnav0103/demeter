@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import CropDetails from "./pages/CropDetails";
 import AddCrop from "./pages/AddCrop";
+import RunCycle from "./pages/RunCycle";
 import FarmIntelligence from "./pages/FarmIntelligence";
 import Analytics from "./pages/Analytics";
 import Alerts from "./pages/Alerts";
@@ -43,6 +44,7 @@ function AppInner() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/crop/:cropId" element={<CropDetails />} />
           <Route path="/add-crop" element={<AddCrop />} />
+          <Route path="/run-cycle/:cropId" element={<RunCycle />} />
           <Route path="/intelligence" element={<FarmIntelligence />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/alerts" element={<Alerts />} />

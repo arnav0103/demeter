@@ -62,7 +62,7 @@ function buildActivityLog(historyData) {
         .split(" ")[0];
       const msg = p.strategic_intent
         ? `Strategy: ${p.strategic_intent.replace(/_/g, " ")}`
-        : `Monitoring ${p.crop || "crop"} — seq #${p.sequence_number || 1}`;
+        : `Monitoring ${p.crop || "crop"} - seq #${p.sequence_number || 1}`;
       const ts = p.timestamp
         ? new Date(p.timestamp).toLocaleTimeString([], {
             hour: "2-digit",
@@ -130,10 +130,10 @@ export default function LandingPage() {
         },
       ]
     : [
-        { val: "—", label: t("landing_active_crops") },
-        { val: "—", label: t("landing_crop_types") },
-        { val: "—", label: t("landing_total_cycles") },
-        { val: "—", label: t("landing_active_alerts") },
+        { val: "-", label: t("landing_active_crops") },
+        { val: "-", label: t("landing_crop_types") },
+        { val: "-", label: t("landing_total_cycles") },
+        { val: "-", label: t("landing_active_alerts") },
       ];
 
   // Live sensor readings
@@ -163,10 +163,10 @@ export default function LandingPage() {
         },
       ]
     : [
-        { label: t("analytics_avg_ph"), value: "—", ok: true },
-        { label: t("analytics_avg_ec"), value: "—", ok: true },
-        { label: t("sensor_temp").toUpperCase(), value: "—", ok: true },
-        { label: t("sensor_humidity").toUpperCase(), value: "—", ok: true },
+        { label: t("analytics_avg_ph"), value: "-", ok: true },
+        { label: t("analytics_avg_ec"), value: "-", ok: true },
+        { label: t("sensor_temp").toUpperCase(), value: "-", ok: true },
+        { label: t("sensor_humidity").toUpperCase(), value: "-", ok: true },
       ];
 
   return (
@@ -341,7 +341,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right — live HUD */}
+          {/* Right - live HUD */}
           <div
             className={`relative ${mounted ? "animate-fade-in" : "opacity-0"}`}
           >

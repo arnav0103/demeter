@@ -4,7 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Dark Theme ───────────────────────────────────────────────── */
+/* Dark Theme */
 :root,
 [data-theme="dark"] {
   --bg: #0c1a0e;
@@ -44,7 +44,7 @@
   --btn-on-green: #0c1a0e;
 }
 
-/* ─── Light Theme ──────────────────────────────────────────────── */
+/* Light Theme */
 [data-theme="light"] {
   --bg: #f0f7f1;
   --bg-2: #ffffff;
@@ -70,7 +70,7 @@
   --tooltip-bg: #ffffff;
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
 
-  /* Log / terminal area — light but distinct */
+  /* Log / terminal area - light but distinct */
   --log-bg: #f0f5f1;
   --log-text: #3d5e42;
 
@@ -82,7 +82,7 @@
   --btn-on-green: #ffffff;
 }
 
-/* ─── Hindi font body override ─────────────────────────────────── */
+/* Hindi font body override */
 [data-lang="hi"] body,
 [data-lang="hi"] button,
 [data-lang="hi"] input,
@@ -90,7 +90,7 @@
   font-family: "Noto Sans Devanagari", "Syne", sans-serif;
 }
 
-/* ─── Reset ────────────────────────────────────────────────────── */
+/* Reset */
 * {
   box-sizing: border-box;
 }
@@ -107,7 +107,7 @@ body {
     color 0.25s ease;
 }
 
-/* ─── Scrollbar ────────────────────────────────────────────────── */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -120,7 +120,7 @@ body {
   border-radius: 3px;
 }
 
-/* ─── TYPOGRAPHY ───────────────────────────────────────────────── */
+/* TYPOGRAPHY */
 .section-label {
   font-size: 11px;
   font-family: "DM Mono", monospace;
@@ -184,7 +184,7 @@ body {
   margin: 2px 0 0;
 }
 
-/* ─── Table ────────────────────────────────────────────────────── */
+/* Table */
 .data-table th {
   font-size: 11px;
   font-family: "DM Mono", monospace;
@@ -207,7 +207,7 @@ body {
   border-bottom: none;
 }
 
-/* ─── UTILITIES ────────────────────────────────────────────────── */
+/* UTILITIES */
 .font-mono {
   font-family: "DM Mono", monospace;
 }
@@ -221,7 +221,7 @@ body {
     0 0 60px rgba(74, 222, 128, 0.05);
 }
 
-/* ─── Scan line (dark only) ────────────────────────────────────── */
+/* Scan line (dark only) */
 @keyframes scanline {
   0% {
     transform: translateY(-100%);
@@ -250,7 +250,7 @@ body {
   display: none;
 }
 
-/* ─── Animations ───────────────────────────────────────────────── */
+/* Animations */
 @keyframes fadeUp {
   from {
     opacity: 0;
@@ -407,7 +407,7 @@ body {
     linear-gradient(90deg, rgba(26, 124, 58, 0.05) 1px, transparent 1px);
 }
 
-/* ─── Input fields ─────────────────────────────────────────────── */
+/* Input fields */
 input,
 select,
 textarea {
@@ -423,12 +423,12 @@ input::placeholder {
   color: var(--text-3);
 }
 
-/* ─── Harvest badge animation ──────────────────────────────────── */
+/* Harvest badge animation */
 .harvest-badge {
   animation: harvestPulse 2.5s ease infinite;
 }
 
-/* ─── Log / terminal area ──────────────────────────────────────── */
+/* Log / terminal area */
 .log-area {
   background: var(--log-bg) !important;
   color: var(--log-text);

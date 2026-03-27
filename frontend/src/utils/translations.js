@@ -1,4 +1,4 @@
-// Translations — English + Hindi
+// Translations - English + Hindi
 
 const en = {
   // Navigation & Sidebar
@@ -23,7 +23,7 @@ const en = {
   landing_hero_2: "Thinks",
   landing_hero_3: "For Itself.",
   landing_hero_sub:
-    "Demeter is a cognitive hydroponic system. Seven specialized AI agents collaborate to perceive, reason, and act — optimizing your crops 24/7 without human intervention.",
+    "Demeter is a cognitive hydroponic system. Seven specialized AI agents collaborate to perceive, reason, and act - optimizing your crops 24/7 without human intervention.",
   landing_enter_dash: "Enter Dashboard",
   landing_intelligence: "Intelligence",
   landing_active_crops: "Active Crops",
@@ -87,10 +87,25 @@ const en = {
   details_latest_cmd: "LATEST ACTUATOR COMMAND",
   details_temp_hum: "TEMP & HUMIDITY",
   details_ec_conc: "EC CONCENTRATION",
-  details_event_log: "EVENT LOG — {total} ENTRIES (showing last {limit})",
+  details_event_log: "EVENT LOG - {total} ENTRIES (showing last {limit})",
   details_hide: "Hide",
   details_why: "Why?",
   details_more_lines: "+ {n} more lines",
+
+  // CropDetails - Info tab
+  details_tab_info: "Info",
+  details_planted: "Planted",
+  details_cycle_duration: "Cycle Duration",
+  details_location: "Location",
+  details_total_sequences: "Total Sequences",
+  details_sensor_hardware: "SENSOR HARDWARE",
+  details_sensor_online: "Online",
+  details_days_since: "{n} days since planting",
+  details_days_remain: "{n} days remaining",
+  details_notes: "Notes",
+  details_run_cycle_btn: "Run Agent Cycle",
+  details_lifecycle_progress: "Lifecycle Progress",
+  details_hours_per_cycle: "{n}h per cycle",
 
   // Agent Widgets
   widget_acid: "Acid Dosage",
@@ -120,15 +135,14 @@ const en = {
   sensor_ph: "pH Level",
   sensor_ec: "EC",
   sensor_humidity: "Humidity",
-  sensor_ph_desc: "Water acidity — ideal range: 5.5 to 6.5",
-  sensor_ec_desc: "Nutrient strength in water — ideal: 0.8 to 2.5 dS/m",
-  sensor_temp_desc: "Air temperature — ideal: 18°C to 28°C",
-  sensor_humidity_desc: "Moisture in air — ideal: 40% to 80%",
+  sensor_ph_desc: "Water acidity - ideal range: 5.5 to 6.5",
+  sensor_ec_desc: "Nutrient strength in water - ideal: 0.8 to 2.5 dS/m",
+  sensor_temp_desc: "Air temperature - ideal: 18°C to 28°C",
+  sensor_humidity_desc: "Moisture in air - ideal: 40% to 80%",
 
   // Add Crop
-  add_title: "Add New Crop",
-  add_subtitle:
-    "Set up your crop, enter sensor readings, and let AI monitor it",
+  add_title: "Register New Crop",
+  add_subtitle: "Register a new crop batch in the system",
   add_plant_image: "PLANT IMAGE",
   add_drop_image: "Drop crop image here",
   add_image_hint: "PNG or JPG · optional but helps AI detect disease",
@@ -136,11 +150,25 @@ const en = {
   add_start: "Start Monitoring",
   add_running: "AI Running…",
   add_run_another: "Run Another Cycle",
-  add_view_dashboard: "View in Dashboard →",
+  add_view_dashboard: "Go to Dashboard",
   add_run_next: "Run Next Cycle",
-  add_cycle_done: "Cycle complete — crop registered ✓",
+  add_cycle_done: "Cycle complete - crop registered ✓",
   add_cycle_fail: "Failed to connect to agent pipeline",
   add_cycles_done: "{n} CYCLE{s} DONE",
+  add_field_location: "Location",
+  add_field_location_hint: "Where this crop is physically placed",
+  add_field_location_placeholder: "e.g. Rack A - Shelf 3",
+  add_field_notes: "Notes",
+  add_field_notes_placeholder: "Optional notes about this crop batch",
+  add_auto_cycle_duration: "Cycle Duration (auto)",
+  add_auto_cycle_hint:
+    "Auto-determined based on crop type: {crop} cycles every {hours}h",
+  add_register_btn: "Register Crop",
+  add_registering: "Creating...",
+  add_register_success: "Crop registered successfully!",
+  add_run_first_cycle: "Run First Cycle",
+  add_lifecycle_label: "Growth Timeline",
+  add_crop_id_exists: "This Crop ID already exists",
 
   // Add Crop fields
   add_field_ph: "pH Level",
@@ -163,11 +191,16 @@ const en = {
   add_phase_research: "Research",
   add_phase_plan: "Plan",
   add_phase_execute: "Execute",
-  add_log_live: "AGENT PIPELINE — LIVE",
+  add_log_live: "AGENT PIPELINE - LIVE",
   add_log_done: "CYCLE COMPLETE",
   add_log_idle: "PIPELINE LOG",
   add_log_lines: "{n} lines",
   add_actuator_dispatched: "ACTUATOR COMMANDS DISPATCHED",
+
+  // Run Cycle page
+  run_title: "Run Agent Cycle",
+  run_subtitle: "Execute AI monitoring cycle for {crop}",
+  run_for_crop: "Running for: {crop}",
 
   // Alerts
   alerts_title: "Alerts",
@@ -178,7 +211,7 @@ const en = {
   alerts_unacked: "UNACKNOWLEDGED · {n}",
   alerts_acknowledged: "ACKNOWLEDGED · {n}",
   alerts_empty_connected: "All clear for the selected filter",
-  alerts_empty_nodata: "No data loaded — connect your farm and run some cycles",
+  alerts_empty_nodata: "No data loaded - connect your farm and run some cycles",
   alerts_unacked_only: "Unacked only",
   alerts_show_all: "All",
   alerts_filter_harvest: "🌾 Harvest",
@@ -193,22 +226,22 @@ const en = {
   // Alert titles & descriptions
   alert_harvest_title: "Crop ready for harvest",
   alert_harvest_desc:
-    "{crop} ({id}) has reached {pct}% maturity — time to harvest!",
+    "{crop} ({id}) has reached {pct}% maturity - time to harvest!",
   alert_ph_low_title: "pH critically low",
   alert_ph_low_desc:
-    "{crop} ({id}): pH at {val} — immediate base dosing required.",
+    "{crop} ({id}): pH at {val} - immediate base dosing required.",
   alert_ph_high_title: "pH critically high",
   alert_ph_high_desc:
-    "{crop} ({id}): pH at {val} — acid dosing required immediately.",
+    "{crop} ({id}): pH at {val} - acid dosing required immediately.",
   alert_ec_high_title: "EC dangerously high",
   alert_ec_high_desc:
-    "{crop} ({id}): EC at {val} dS/m — severe nutrient burn risk.",
+    "{crop} ({id}): EC at {val} dS/m - severe nutrient burn risk.",
   alert_temp_cold_title: "Temperature too cold",
   alert_temp_cold_desc:
-    "{crop} ({id}): Air temp at {val}°C — root damage risk.",
+    "{crop} ({id}): Air temp at {val}°C - root damage risk.",
   alert_temp_hot_title: "Temperature too hot",
   alert_temp_hot_desc:
-    "{crop} ({id}): Air temp at {val}°C — heat stress and root rot risk.",
+    "{crop} ({id}): Air temp at {val}°C - heat stress and root rot risk.",
   alert_disease_title: "Disease or pest detected",
   alert_disease_desc: '{crop} ({id}): Visual anomaly. Outcome: "{outcome}"',
   alert_cycle_fail_title: "Cycle failure recorded",
@@ -218,13 +251,13 @@ const en = {
   alert_ph_warn_high_title: "pH above optimal range",
   alert_ec_warn_title: "EC approaching high limit",
   alert_ec_warn_desc:
-    "{crop} ({id}): EC at {val} dS/m — nutrient burn risk increasing.",
+    "{crop} ({id}): EC at {val} dS/m - nutrient burn risk increasing.",
   alert_temp_warn_low_title: "Temperature on the low side",
-  alert_temp_warn_low_desc: "{crop} ({id}): {val}°C — slow growth expected.",
+  alert_temp_warn_low_desc: "{crop} ({id}): {val}°C - slow growth expected.",
   alert_temp_warn_high_title: "Temperature elevated",
-  alert_temp_warn_high_desc: "{crop} ({id}): {val}°C — heat stress likely.",
+  alert_temp_warn_high_desc: "{crop} ({id}): {val}°C - heat stress likely.",
   alert_deteriorating_title: "Condition deteriorating",
-  alert_deteriorating_desc: '{crop} ({id}): Seq #{seq} — "{outcome}"',
+  alert_deteriorating_desc: '{crop} ({id}): Seq #{seq} - "{outcome}"',
   alert_cycle_done_title: "Cycle #{seq} completed",
   alert_cycle_done_desc: "{crop} ({id}): Sequence stored. {extra}",
 
@@ -285,9 +318,9 @@ const en = {
   intel_critical: "Critical",
   intel_fleet_wide: "FLEET-WIDE",
   intel_crop_aware: "CROP-AWARE",
-  intel_search_placeholder: "Search crops — 'Show all Tomato'...",
+  intel_search_placeholder: "Search crops - 'Show all Tomato'...",
   intel_ask_placeholder_fleet:
-    "Ask anything about your farm — decisions, trends...",
+    "Ask anything about your farm - decisions, trends...",
   intel_ask_placeholder_crop: "Ask anything about {crop}…",
   intel_filter_by: "FILTER BY:",
   intel_ask_about: "ASK ABOUT:",
@@ -387,7 +420,7 @@ const en = {
 
   // Help
   help_title: "Help & Glossary",
-  help_subtitle: "Everything you need to know — explained simply",
+  help_subtitle: "Everything you need to know - explained simply",
   help_section_terms: "📊 Sensor Terms Explained",
   help_section_agents: "🤖 How AI Works for You",
   help_section_stages: "🌱 Growth Stages",
@@ -411,13 +444,13 @@ const en = {
   onboarding_finish: "Get Started!",
   onboarding_s1_title: "Welcome to Demeter! 🌱",
   onboarding_s1_desc:
-    "Your smart farm assistant. Demeter automatically monitors your crops and adjusts water, nutrients, and temperature — 24 hours a day. No manual work needed.",
+    "Your smart farm assistant. Demeter automatically monitors your crops and adjusts water, nutrients, and temperature - 24 hours a day. No manual work needed.",
   onboarding_s2_title: "Your Crop Dashboard",
   onboarding_s2_desc:
-    "See all your crops at a glance. Each card shows the health of that crop:\n\n🟢 Green (Healthy) — Everything is fine\n🟡 Yellow (Attention) — Needs checking\n🔴 Red (Critical) — Act immediately",
+    "See all your crops at a glance. Each card shows the health of that crop:\n\n🟢 Green (Healthy) - Everything is fine\n🟡 Yellow (Attention) - Needs checking\n🔴 Red (Critical) - Act immediately",
   onboarding_s3_title: "Adding a Crop",
   onboarding_s3_desc:
-    'Tap the green "Add Crop" button. Enter the readings from your water sensors — pH, EC (nutrients), temperature, and humidity. The AI will handle everything else.',
+    'Tap "Add Crop" to register a new batch. Choose the crop type (Lettuce, Tomato, Basil, or Strawberry), give it a unique ID, and the system will set up everything automatically - cycle duration, default sensors, and growth tracking. Once registered, you can run AI monitoring cycles from the crop\'s detail page.',
   onboarding_s4_title: "Alerts Keep You Informed",
   onboarding_s4_desc:
     "When a crop needs attention, a red number appears on the Alerts menu. Check it daily to keep your crops healthy. Critical alerts should be addressed immediately!",
@@ -535,10 +568,25 @@ const hi = {
   details_temp_hum: "तापमान और नमी",
   details_ec_conc: "EC सांद्रता",
   details_event_log:
-    "इवेंट लॉग — {total} प्रविष्टियां (अंतिम {limit} दिखा रहे हैं)",
+    "इवेंट लॉग - {total} प्रविष्टियां (अंतिम {limit} दिखा रहे हैं)",
   details_hide: "छिपाएं",
   details_why: "क्यों?",
   details_more_lines: "+ {n} और पंक्तियां",
+
+  // CropDetails - Info tab
+  details_tab_info: "जानकारी",
+  details_planted: "बोया गया",
+  details_cycle_duration: "चक्र अवधि",
+  details_location: "स्थान",
+  details_total_sequences: "कुल अनुक्रम",
+  details_sensor_hardware: "सेंसर हार्डवेयर",
+  details_sensor_online: "ऑनलाइन",
+  details_days_since: "{n} दिन बोने के बाद",
+  details_days_remain: "{n} दिन शेष",
+  details_notes: "नोट्स",
+  details_run_cycle_btn: "एजेंट चक्र चलाएं",
+  details_lifecycle_progress: "जीवनचक्र प्रगति",
+  details_hours_per_cycle: "प्रति चक्र {n} घंटे",
 
   // Agent Widgets
   widget_acid: "एसिड खुराक",
@@ -568,14 +616,14 @@ const hi = {
   sensor_ph: "pH स्तर",
   sensor_ec: "EC",
   sensor_humidity: "नमी",
-  sensor_ph_desc: "पानी की अम्लता — सही: 5.5 से 6.5",
-  sensor_ec_desc: "पानी में पोषक तत्व — सही: 0.8 से 2.5",
-  sensor_temp_desc: "हवा का तापमान — सही: 18°C से 28°C",
-  sensor_humidity_desc: "हवा में नमी — सही: 40% से 80%",
+  sensor_ph_desc: "पानी की अम्लता - सही: 5.5 से 6.5",
+  sensor_ec_desc: "पानी में पोषक तत्व - सही: 0.8 से 2.5",
+  sensor_temp_desc: "हवा का तापमान - सही: 18°C से 28°C",
+  sensor_humidity_desc: "हवा में नमी - सही: 40% से 80%",
 
   // Add Crop
-  add_title: "नई फसल जोड़ें",
-  add_subtitle: "फसल सेट करें, सेंसर रीडिंग डालें और AI को निगरानी करने दें",
+  add_title: "नई फसल दर्ज करें",
+  add_subtitle: "सिस्टम में एक नई फसल दर्ज करें",
   add_plant_image: "पौधे की तस्वीर",
   add_drop_image: "फसल की तस्वीर यहाँ डालें",
   add_image_hint: "PNG या JPG · वैकल्पिक, बीमारी पहचान में मदद करता है",
@@ -583,11 +631,24 @@ const hi = {
   add_start: "निगरानी शुरू करें",
   add_running: "AI काम कर रहा है…",
   add_run_another: "दोबारा चलाएं",
-  add_view_dashboard: "डैशबोर्ड में देखें →",
+  add_view_dashboard: "डैशबोर्ड पर जाएं",
   add_run_next: "अगला चक्र चलाएं",
-  add_cycle_done: "चक्र पूरा — फसल दर्ज हो गई ✓",
+  add_cycle_done: "चक्र पूरा - फसल दर्ज हो गई ✓",
   add_cycle_fail: "एजेंट से कनेक्ट नहीं हो सका",
   add_cycles_done: "{n} चक्र पूरे",
+  add_field_location: "स्थान",
+  add_field_location_hint: "यह फसल कहाँ रखी है",
+  add_field_location_placeholder: "जैसे रैक A - शेल्फ 3",
+  add_field_notes: "नोट्स",
+  add_field_notes_placeholder: "इस बैच के बारे में नोट्स",
+  add_auto_cycle_duration: "चक्र अवधि (स्वचालित)",
+  add_auto_cycle_hint: "फसल प्रकार के अनुसार: {crop} हर {hours} घंटे में",
+  add_register_btn: "फसल दर्ज करें",
+  add_registering: "बना रहे हैं...",
+  add_register_success: "फसल सफलतापूर्वक दर्ज हो गई!",
+  add_run_first_cycle: "पहला चक्र चलाएं",
+  add_lifecycle_label: "विकास समयरेखा",
+  add_crop_id_exists: "यह फसल ID पहले से मौजूद है",
 
   // Add Crop fields
   add_field_ph: "pH स्तर",
@@ -609,11 +670,16 @@ const hi = {
   add_phase_research: "अनुसंधान",
   add_phase_plan: "योजना",
   add_phase_execute: "कार्रवाई",
-  add_log_live: "एजेंट पाइपलाइन — लाइव",
+  add_log_live: "एजेंट पाइपलाइन - लाइव",
   add_log_done: "चक्र पूरा हुआ",
   add_log_idle: "पाइपलाइन लॉग",
   add_log_lines: "{n} पंक्तियां",
   add_actuator_dispatched: "एक्चुएटर कमांड भेजे गए",
+
+  // Run Cycle page
+  run_title: "एजेंट चक्र चलाएं",
+  run_subtitle: "{crop} के लिए AI चक्र चलाएं",
+  run_for_crop: "फसल: {crop} के लिए",
 
   // Alerts
   alerts_title: "अलर्ट",
@@ -624,7 +690,7 @@ const hi = {
   alerts_unacked: "अनदेखे · {n}",
   alerts_acknowledged: "देखे गए · {n}",
   alerts_empty_connected: "चुने फ़िल्टर के लिए सब ठीक है",
-  alerts_empty_nodata: "कोई डेटा नहीं — फार्म जोड़ें और चक्र चलाएं",
+  alerts_empty_nodata: "कोई डेटा नहीं - फार्म जोड़ें और चक्र चलाएं",
   alerts_unacked_only: "केवल अनदेखे",
   alerts_show_all: "सभी",
   alerts_filter_harvest: "🌾 कटाई",
@@ -638,19 +704,19 @@ const hi = {
 
   // Alert titles & descriptions
   alert_harvest_title: "फसल कटाई के लिए तैयार",
-  alert_harvest_desc: "{crop} ({id}) की परिपक्वता {pct}% — कटाई का समय!",
+  alert_harvest_desc: "{crop} ({id}) की परिपक्वता {pct}% - कटाई का समय!",
   alert_ph_low_title: "pH बहुत कम",
-  alert_ph_low_desc: "{crop} ({id}): pH {val} — तुरंत बेस डोज़िंग जरूरी।",
+  alert_ph_low_desc: "{crop} ({id}): pH {val} - तुरंत बेस डोज़िंग जरूरी।",
   alert_ph_high_title: "pH बहुत अधिक",
-  alert_ph_high_desc: "{crop} ({id}): pH {val} — तुरंत एसिड डोज़िंग जरूरी।",
+  alert_ph_high_desc: "{crop} ({id}): pH {val} - तुरंत एसिड डोज़िंग जरूरी।",
   alert_ec_high_title: "EC खतरनाक स्तर पर",
-  alert_ec_high_desc: "{crop} ({id}): EC {val} dS/m — पोषक तत्व जलने का खतरा।",
+  alert_ec_high_desc: "{crop} ({id}): EC {val} dS/m - पोषक तत्व जलने का खतरा।",
   alert_temp_cold_title: "तापमान बहुत कम",
   alert_temp_cold_desc:
-    "{crop} ({id}): तापमान {val}°C — जड़ें खराब हो सकती हैं।",
+    "{crop} ({id}): तापमान {val}°C - जड़ें खराब हो सकती हैं।",
   alert_temp_hot_title: "तापमान बहुत अधिक",
   alert_temp_hot_desc:
-    "{crop} ({id}): तापमान {val}°C — गर्मी का तनाव और जड़ सड़ने का खतरा।",
+    "{crop} ({id}): तापमान {val}°C - गर्मी का तनाव और जड़ सड़ने का खतरा।",
   alert_disease_title: "बीमारी या कीट पाया गया",
   alert_disease_desc: '{crop} ({id}): दृश्य असामान्यता। परिणाम: "{outcome}"',
   alert_cycle_fail_title: "चक्र विफल",
@@ -660,13 +726,13 @@ const hi = {
   alert_ph_warn_high_title: "pH इष्टतम से अधिक",
   alert_ec_warn_title: "EC सीमा के पास",
   alert_ec_warn_desc:
-    "{crop} ({id}): EC {val} dS/m — पोषक तत्व जलने का खतरा बढ़ रहा है।",
+    "{crop} ({id}): EC {val} dS/m - पोषक तत्व जलने का खतरा बढ़ रहा है।",
   alert_temp_warn_low_title: "तापमान थोड़ा कम",
-  alert_temp_warn_low_desc: "{crop} ({id}): {val}°C — धीमी वृद्धि संभव।",
+  alert_temp_warn_low_desc: "{crop} ({id}): {val}°C - धीमी वृद्धि संभव।",
   alert_temp_warn_high_title: "तापमान बढ़ा हुआ",
-  alert_temp_warn_high_desc: "{crop} ({id}): {val}°C — गर्मी का तनाव संभव।",
+  alert_temp_warn_high_desc: "{crop} ({id}): {val}°C - गर्मी का तनाव संभव।",
   alert_deteriorating_title: "स्थिति बिगड़ रही है",
-  alert_deteriorating_desc: '{crop} ({id}): चक्र #{seq} — "{outcome}"',
+  alert_deteriorating_desc: '{crop} ({id}): चक्र #{seq} - "{outcome}"',
   alert_cycle_done_title: "चक्र #{seq} पूरा",
   alert_cycle_done_desc: "{crop} ({id}): अनुक्रम सहेजा गया। {extra}",
 
@@ -727,7 +793,7 @@ const hi = {
   intel_critical: "गंभीर",
   intel_fleet_wide: "सभी फसलें",
   intel_crop_aware: "फसल-विशेष",
-  intel_search_placeholder: "फसलें खोजें — 'टमाटर दिखाएं'...",
+  intel_search_placeholder: "फसलें खोजें - 'टमाटर दिखाएं'...",
   intel_ask_placeholder_fleet: "अपने फार्म के बारे में कुछ भी पूछें...",
   intel_ask_placeholder_crop: "{crop} के बारे में कुछ भी पूछें…",
   intel_filter_by: "फ़िल्टर करें:",
@@ -856,10 +922,10 @@ const hi = {
     "यह आपका स्मार्ट फार्म सहायक है। Demeter आपकी फसलों की स्वचालित निगरानी करता है और पानी, पोषक तत्व और तापमान को 24 घंटे नियंत्रित करता है।",
   onboarding_s2_title: "आपका फसल डैशबोर्ड",
   onboarding_s2_desc:
-    "यहाँ सभी फसलें एक साथ देखें। हर कार्ड फसल की स्वास्थ्य स्थिति दिखाता है:\n\n🟢 हरा (स्वस्थ) — सब ठीक है\n🟡 पीला (ध्यान दें) — जांच जरूरी\n🔴 लाल (गंभीर) — तुरंत कार्रवाई करें",
+    "यहाँ सभी फसलें एक साथ देखें। हर कार्ड फसल की स्वास्थ्य स्थिति दिखाता है:\n\n🟢 हरा (स्वस्थ) - सब ठीक है\n🟡 पीला (ध्यान दें) - जांच जरूरी\n🔴 लाल (गंभीर) - तुरंत कार्रवाई करें",
   onboarding_s3_title: "फसल कैसे जोड़ें",
   onboarding_s3_desc:
-    'हरा "फसल जोड़ें" बटन दबाएं। अपने पानी के सेंसर की रीडिंग डालें — pH, EC (पोषक तत्व), तापमान और नमी। AI बाकी सब संभाल लेगा।',
+    '"फसल जोड़ें" पर टैप करें। फसल का प्रकार चुनें (लेट्यूस, टमाटर, तुलसी या स्ट्रॉबेरी), एक अनोखी ID दें, और सिस्टम सब कुछ स्वचालित रूप से सेट करेगा - चक्र अवधि, डिफ़ॉल्ट सेंसर, और विकास ट्रैकिंग। एक बार दर्ज होने के बाद, फसल के विवरण पृष्ठ से AI निगरानी चक्र चला सकते हैं।',
   onboarding_s4_title: "अलर्ट से अपडेट रहें",
   onboarding_s4_desc:
     "जब किसी फसल को ध्यान की जरूरत हो, अलर्ट मेनू पर लाल नंबर दिखेगा। अपनी फसलें स्वस्थ रखने के लिए रोज़ जांचें!",

@@ -8,6 +8,8 @@ import {
   calculateMaturity,
   deriveCropStatus,
   isReadyToHarvest,
+  getDaysRemaining,
+  SUPPORTED_CROPS,
 } from "../utils/dataUtils";
 import {
   SlidersHorizontal,
@@ -43,7 +45,8 @@ const STAGES_KEYS = [
   "stage_flowering",
   "stage_fruiting",
 ];
-const CROPS = ["All", "Lettuce", "Tomato", "Basil", "Spinach", "Cucumber"];
+// Only 4 supported crops (+ All)
+const CROPS = ["All", ...SUPPORTED_CROPS];
 const STATUSES_KEYS = [
   "stage_all",
   "dash_healthy",
@@ -53,8 +56,6 @@ const STATUSES_KEYS = [
 
 function CropCard({ data, onClick, t, td }) {
   const maturity = data.maturity || 40;
-
-  // Map backend status to translation key
   const statusKey =
     data.status === "Healthy"
       ? "dash_healthy"
@@ -303,7 +304,7 @@ function CropCard({ data, onClick, t, td }) {
             ) : (
               <>
                 <Clock size={10} />
-                {data.daysLeft > 0
+                {data.daysLeft !== null && data.daysLeft > 0
                   ? t("dash_days_left", { n: data.daysLeft })
                   : t("dash_ready")}
               </>
@@ -401,8 +402,9 @@ export default function Dashboard() {
       return "https://images.unsplash.com/photo-1591857177580-dc82b9e4e5c9?q=80&w=400";
     if (n.includes("basil"))
       return "https://images.unsplash.com/photo-1618164436241-4473940d1f5c?q=80&w=400";
-    if (n.includes("spinach"))
-      return "https://images.unsplash.com/photo-1576045057995-568f588f82fb?q=80&w=400";
+    if (n.includes("strawberry"))
+      return "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?q=80&w=400";
+    // Default: lettuce
     return "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?q=80&w=400";
   };
 
@@ -410,21 +412,23 @@ export default function Dashboard() {
     if (dashboard) {
       setCrops(
         dashboard.map((item) => {
+          // Dashboard items are normalized: { id, payload: {...} }
           const p = item.payload || {};
           const sensors = extractSensors(p);
           const rawStage = p.stage || "";
+          const daysLeft = getDaysRemaining(p);
 
           return {
             id: p.crop_id || item.id,
-            cropId: p.crop_id || "—",
+            cropId: p.crop_id || "-",
             name: p.crop || t("common_unknown"),
-            statusMsg: rawStage ? rawStage : t("dash_status_growing"),
-            image: getImg(p.crop),
+            statusMsg: rawStage || t("dash_status_growing"),
+            image: p.image_url || getImg(p.crop),
             status: deriveCropStatus(p),
-            maturity: calculateMaturity(p.sequence_number),
+            maturity: calculateMaturity(p),
             harvestReady: isReadyToHarvest(p),
             seq: p.sequence_number,
-            daysLeft: 30 - (p.sequence_number || 0),
+            daysLeft: daysLeft,
             sensors: { temp: sensors.temp, ph: sensors.ph },
             stage: rawStage,
             rawCrop: (p.crop || "").trim(),
@@ -451,7 +455,11 @@ export default function Dashboard() {
           !td(c.statusMsg).toLowerCase().includes(q)
         )
           return false;
-        if (filterStage !== "All" && c.stage !== filterStage) return false;
+        if (
+          filterStage !== "All" &&
+          c.stage.toLowerCase() !== filterStage.toLowerCase()
+        )
+          return false;
         if (filterCrop !== "All" && c.rawCrop !== filterCrop) return false;
         if (filterStatus !== "All" && c.status !== filterStatus) return false;
         if (filterReady && !c.harvestReady) return false;
@@ -476,7 +484,6 @@ export default function Dashboard() {
     [crops],
   );
 
-  // Keys to match english defaults in backend to their translations
   const STAGES_EN = ["All", "Seedling", "Vegetative", "Flowering", "Fruiting"];
   const STATUS_EN = ["All", "Healthy", "Attention", "Critical"];
 
@@ -778,7 +785,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Crop grid */}
       <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
         {loading ? (
           <div

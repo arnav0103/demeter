@@ -210,7 +210,7 @@ const MANUAL_SCENARIOS = [
 
 const HELP_EN = {
   help_title: "Help & Glossary",
-  help_subtitle: "Everything you need to know — explained simply",
+  help_subtitle: "Everything you need to know - explained simply",
   help_section_terms: "📊 Sensor Terms Explained",
   help_section_agents: "🤖 How AI Works for You",
   help_section_stages: "🌱 Growth Stages",
@@ -231,14 +231,14 @@ const HELP_EN = {
   help_term_ph: "pH (Acidity of Water)",
   help_term_ph_short: "pH",
   help_term_ph_simple:
-    "pH tells you if the water is sour (acidic) or bitter (alkaline). Think of lemon juice (very sour = low pH) vs. baking soda (bitter = high pH). Plants need water that is slightly acidic — not too sour, not too bitter.",
+    "pH tells you if the water is sour (acidic) or bitter (alkaline). Think of lemon juice (very sour = low pH) vs. baking soda (bitter = high pH). Plants need water that is slightly acidic - not too sour, not too bitter.",
   help_term_ph_detail:
     "pH is measured on a scale from 0 to 14. A value of 7 is neutral (pure water). Below 7 is acidic. Above 7 is alkaline. In hydroponics, root cells absorb nutrients through a process that depends on water chemistry. If pH is wrong, roots physically cannot absorb nutrients even if they are present in the water.",
   help_term_ph_range: "5.5 - 6.5",
   help_term_ph_low:
     "Roots get damaged. Iron and manganese become toxic. Leaves turn yellow. Plant looks sick.",
   help_term_ph_high:
-    "Nutrients lock up — plant cannot absorb calcium, magnesium, or iron. Leaves look pale and growth slows.",
+    "Nutrients lock up - plant cannot absorb calcium, magnesium, or iron. Leaves look pale and growth slows.",
   help_term_ph_ai:
     "If pH drops below 5.5, Demeter automatically doses base solution (pH Up) into the water. If pH rises above 6.5, it doses acid (pH Down). This happens within minutes without you needing to do anything.",
   help_term_ph_manual:
@@ -250,9 +250,9 @@ const HELP_EN = {
   help_term_ec: "EC (Electrical Conductivity / Nutrient Strength)",
   help_term_ec_short: "EC",
   help_term_ec_simple:
-    "EC measures how many nutrients are dissolved in your water. Think of it like making tea — a little tea is fine, but too much tea (very dark) can be bitter and harmful. EC tells you if your water has the right amount of 'food' for the plant.",
+    "EC measures how many nutrients are dissolved in your water. Think of it like making tea - a little tea is fine, but too much tea (very dark) can be bitter and harmful. EC tells you if your water has the right amount of 'food' for the plant.",
   help_term_ec_detail:
-    "EC (Electrical Conductivity) is measured in dS/m (deciSiemens per meter). Pure water conducts very little electricity. When you dissolve fertilizer salts in water, it conducts more electricity. The sensor measures this to determine nutrient concentration. High EC means too many salts — this draws water OUT of roots (osmotic stress). Low EC means the plant is not getting enough food.",
+    "EC (Electrical Conductivity) is measured in dS/m (deciSiemens per meter). Pure water conducts very little electricity. When you dissolve fertilizer salts in water, it conducts more electricity. The sensor measures this to determine nutrient concentration. High EC means too many salts - this draws water OUT of roots (osmotic stress). Low EC means the plant is not getting enough food.",
   help_term_ec_range: "0.8 - 2.5 dS/m",
   help_term_ec_low:
     "Plant is starving. Leaves become pale, growth slows, and yield drops. The plant has water but no food.",
@@ -263,7 +263,7 @@ const HELP_EN = {
   help_term_ec_manual:
     "If EC spikes suddenly without explanation, it may indicate a pump failure delivering pure nutrient concentrate or contamination. Physically check the nutrient reservoir and all dosing lines.",
   help_term_ec_agri:
-    "In soil farming, nutrients bind to soil particles and release slowly — this naturally buffers EC. In hydroponics, nutrients are directly in solution, making EC much more sensitive. Different crops need different EC: leafy greens prefer lower EC (0.8-1.6), while fruiting crops like tomatoes tolerate higher levels (2.0-3.5).",
+    "In soil farming, nutrients bind to soil particles and release slowly - this naturally buffers EC. In hydroponics, nutrients are directly in solution, making EC much more sensitive. Different crops need different EC: leafy greens prefer lower EC (0.8-1.6), while fruiting crops like tomatoes tolerate higher levels (2.0-3.5).",
 
   // Humidity
   help_term_humidity: "Humidity (Moisture in Air)",
@@ -271,7 +271,7 @@ const HELP_EN = {
   help_term_humidity_simple:
     "Humidity is how wet or dry the air feels. On a very humid day, you feel sweaty and sticky. Plants also 'breathe' through tiny holes in their leaves. If air is too wet, these holes clog and fungus grows. If air is too dry, leaves lose water too fast and wilt.",
   help_term_humidity_detail:
-    "Humidity is measured as Relative Humidity (RH%) — the percentage of moisture in the air compared to the maximum it can hold at that temperature. Plants exchange gases and water vapor through structures called stomata (tiny pores). High humidity reduces evaporation from leaves, slowing the plant's 'transpiration pump' which is what drives nutrient uptake. Very high humidity (above 85%) creates perfect conditions for fungal diseases like powdery mildew and botrytis.",
+    "Humidity is measured as Relative Humidity (RH%) - the percentage of moisture in the air compared to the maximum it can hold at that temperature. Plants exchange gases and water vapor through structures called stomata (tiny pores). High humidity reduces evaporation from leaves, slowing the plant's 'transpiration pump' which is what drives nutrient uptake. Very high humidity (above 85%) creates perfect conditions for fungal diseases like powdery mildew and botrytis.",
   help_term_humidity_range: "40% - 80% RH",
   help_term_humidity_low:
     "Leaves curl and dry out. Stomata close to conserve water, halting photosynthesis and nutrient absorption. Severe drought stress.",
@@ -280,7 +280,7 @@ const HELP_EN = {
   help_term_humidity_ai:
     "Demeter controls fan speed automatically to regulate airflow and humidity. If humidity is high, fans speed up to improve air circulation. If it's too low, fans slow down. The atmospheric agent monitors and adjusts this continuously.",
   help_term_humidity_manual:
-    "If humidity stays critically high despite maximum fan speed, it may indicate a structural issue — poor ventilation design, leaking irrigation, or a broken HVAC system. You will need physical intervention to fix the root cause.",
+    "If humidity stays critically high despite maximum fan speed, it may indicate a structural issue - poor ventilation design, leaking irrigation, or a broken HVAC system. You will need physical intervention to fix the root cause.",
   help_term_humidity_agri:
     "In open-field farming, humidity is weather-dependent and uncontrollable. Indoor/hydroponic farming's great advantage is humidity control. Controlling humidity in the 60-70% range during vegetative growth, then dropping to 40-50% during flowering dramatically reduces disease pressure and improves yields.",
 
@@ -288,9 +288,9 @@ const HELP_EN = {
   help_term_temp: "Temperature (Heat in the Air)",
   help_term_temp_short: "Temperature",
   help_term_temp_simple:
-    "Temperature is how hot or cold the air is. Plants are like people — they prefer a comfortable temperature. Too cold and they 'slow down' and stop growing. Too hot and they get heat stroke, and bacteria in the water can multiply rapidly.",
+    "Temperature is how hot or cold the air is. Plants are like people - they prefer a comfortable temperature. Too cold and they 'slow down' and stop growing. Too hot and they get heat stroke, and bacteria in the water can multiply rapidly.",
   help_term_temp_detail:
-    "Air temperature directly affects the rate of photosynthesis, respiration, enzyme activity, and transpiration in plants. The nutrient solution temperature is equally important — warm water holds less dissolved oxygen (DO), and roots need oxygen to function. Most hydroponic crops prefer 18-28°C air temperature. Below 15°C, enzymatic reactions slow dramatically. Above 30°C, nutrient uptake becomes erratic, and pathogenic bacteria proliferate in the root zone.",
+    "Air temperature directly affects the rate of photosynthesis, respiration, enzyme activity, and transpiration in plants. The nutrient solution temperature is equally important - warm water holds less dissolved oxygen (DO), and roots need oxygen to function. Most hydroponic crops prefer 18-28°C air temperature. Below 15°C, enzymatic reactions slow dramatically. Above 30°C, nutrient uptake becomes erratic, and pathogenic bacteria proliferate in the root zone.",
   help_term_temp_range: "18°C - 28°C",
   help_term_temp_low:
     "Growth nearly stops. Roots may rot in cold water. Germination fails. Plant looks stunted and dark.",
@@ -307,7 +307,7 @@ const HELP_EN = {
   help_agent_fetch_name: "Fetch Agent",
   help_agent_fetch_role: "Reads all sensor data",
   help_agent_fetch_detail:
-    "This agent collects pH, EC, temperature, humidity readings and any plant images. It's the eyes and ears of the system — everything starts here.",
+    "This agent collects pH, EC, temperature, humidity readings and any plant images. It's the eyes and ears of the system - everything starts here.",
 
   help_agent_judge_name: "Judge Agent",
   help_agent_judge_role: "Evaluates crop health",
@@ -317,7 +317,7 @@ const HELP_EN = {
   help_agent_strategy_name: "Strategy Agent",
   help_agent_strategy_role: "Decides what action to take",
   help_agent_strategy_detail:
-    "This is the brain. It uses reinforcement learning — it has learned from thousands of past cycles what actions work best for each crop type and situation. It picks the best corrective action.",
+    "This is the brain. It uses reinforcement learning - it has learned from thousands of past cycles what actions work best for each crop type and situation. It picks the best corrective action.",
 
   help_agent_research_name: "Research Agent",
   help_agent_research_role: "Checks memory for similar cases",
@@ -327,7 +327,7 @@ const HELP_EN = {
   help_agent_execute_name: "Execute Agent",
   help_agent_execute_role: "Sends commands to hardware",
   help_agent_execute_detail:
-    "Once a plan is confirmed, this agent sends the actual commands to physical actuators — pumps, fans, dosing systems. It turns digital decisions into real-world actions.",
+    "Once a plan is confirmed, this agent sends the actual commands to physical actuators - pumps, fans, dosing systems. It turns digital decisions into real-world actions.",
 
   help_agent_explainer_name: "Explainer Agent",
   help_agent_explainer_role: "Writes the reasoning in plain language",
@@ -339,25 +339,25 @@ const HELP_EN = {
   help_stage_seedling_desc:
     "The plant has just sprouted from a seed. It's tiny, fragile, and just starting to grow its first leaves.",
   help_stage_seedling_tips:
-    "🌡️ Keep temperature warm (22-26°C). 💧 Keep EC very low (0.5-1.0) — too much nutrient overwhelms fragile roots. 💡 Light should be gentle. This is the most fragile stage.",
+    "🌡️ Keep temperature warm (22-26°C). 💧 Keep EC very low (0.5-1.0) - too much nutrient overwhelms fragile roots. 💡 Light should be gentle. This is the most fragile stage.",
 
   help_stage_vegetative: "Vegetative",
   help_stage_vegetative_desc:
     "The plant is growing leaves and stems rapidly. It's building its structure before it starts making flowers or fruit.",
   help_stage_vegetative_tips:
-    "🌿 Increase nutrient strength (EC 1.2-2.0). 💧 Maintain humidity at 60-70%. This is when the plant grows fastest — it needs maximum nutrition.",
+    "🌿 Increase nutrient strength (EC 1.2-2.0). 💧 Maintain humidity at 60-70%. This is when the plant grows fastest - it needs maximum nutrition.",
 
   help_stage_flowering: "Flowering",
   help_stage_flowering_desc:
-    "The plant starts making flowers. This is a critical stage — conditions here directly affect how much fruit or produce you'll get.",
+    "The plant starts making flowers. This is a critical stage - conditions here directly affect how much fruit or produce you'll get.",
   help_stage_flowering_tips:
-    "🌸 Reduce humidity to 50-60% to prevent bud rot. 🧪 Adjust nutrients — lower nitrogen, higher phosphorus/potassium. Handle the plant gently to avoid dropping flowers.",
+    "🌸 Reduce humidity to 50-60% to prevent bud rot. 🧪 Adjust nutrients - lower nitrogen, higher phosphorus/potassium. Handle the plant gently to avoid dropping flowers.",
 
   help_stage_fruiting: "Fruiting",
   help_stage_fruiting_desc:
     "Flowers have been pollinated and are now developing into fruits or final produce. The plant is putting all its energy into the harvest.",
   help_stage_fruiting_tips:
-    "🍅 Maintain consistent EC and pH — fluctuations now can cause blossom end rot or splitting. 📉 Drop humidity to 40-50%. Watch maturity closely — harvest at the right time!",
+    "🍅 Maintain consistent EC and pH - fluctuations now can cause blossom end rot or splitting. 📉 Drop humidity to 40-50%. Watch maturity closely - harvest at the right time!",
 
   // Manual Intervention
   help_manual_disease_title: "Disease or Pest Outbreak",
@@ -383,6 +383,24 @@ const HELP_EN = {
     "In case of power outages, floods, extreme heat waves, or structural damage to the growing area, manual intervention is always required.",
   help_manual_extreme_action:
     "Have a backup power plan (generator or UPS). Keep manual pH and EC test kits available. Know how to manually adjust nutrients if digital systems fail.",
+
+  // How to Add a Crop
+  help_section_add_crop: "🌿 How to Add a Crop",
+  help_add_crop_step1: 'Click "Add Crop" in the dashboard',
+  help_add_crop_step2:
+    "Choose crop type - Lettuce, Tomato, Basil, or Strawberry",
+  help_add_crop_step3: "Enter a unique Batch ID and optional location/notes",
+  help_add_crop_step4:
+    'Click "Register Crop" - the system auto-sets cycle duration and sensors',
+  help_add_crop_step5:
+    "After registration, go to the crop's Info tab → Run Agent Cycle",
+
+  // Supported Crop Types
+  help_section_crops: "🌱 Supported Crop Types",
+  help_crop_lettuce: "Lettuce - ~21 days · 1h per cycle",
+  help_crop_tomato: "Tomato - ~70 days · 2h per cycle",
+  help_crop_basil: "Basil - ~28 days · 1h per cycle",
+  help_crop_strawberry: "Strawberry - ~63 days · 2h per cycle",
 };
 
 const HELP_HI = {
@@ -409,14 +427,14 @@ const HELP_HI = {
   help_term_ph: "pH (पानी की अम्लता)",
   help_term_ph_short: "pH",
   help_term_ph_simple:
-    "pH बताता है कि पानी खट्टा (अम्लीय) है या कड़वा (क्षारीय)। नींबू के रस की तरह खट्टा = कम pH। बेकिंग सोडा की तरह कड़वा = ज्यादा pH। पौधों को थोड़ा खट्टा पानी चाहिए — न बहुत खट्टा, न बहुत कड़वा।",
+    "pH बताता है कि पानी खट्टा (अम्लीय) है या कड़वा (क्षारीय)। नींबू के रस की तरह खट्टा = कम pH। बेकिंग सोडा की तरह कड़वा = ज्यादा pH। पौधों को थोड़ा खट्टा पानी चाहिए - न बहुत खट्टा, न बहुत कड़वा।",
   help_term_ph_detail:
     "pH 0 से 14 के पैमाने पर मापा जाता है। 7 का मतलब तटस्थ (शुद्ध पानी)। 7 से कम = अम्लीय। 7 से ज्यादा = क्षारीय। हाइड्रोपोनिक्स में, जड़ों की कोशिकाएं पानी की रसायन पर निर्भर एक प्रक्रिया से पोषक तत्व सोखती हैं। यदि pH गलत है, तो जड़ें पोषक तत्व सोख ही नहीं सकती, चाहे वे पानी में मौजूद क्यों न हों।",
   help_term_ph_range: "5.5 - 6.5",
   help_term_ph_low:
     "जड़ें खराब होती हैं। लोहा और मैंगनीज जहरीले हो जाते हैं। पत्तियां पीली पड़ती हैं। पौधा बीमार दिखता है।",
   help_term_ph_high:
-    "पोषक तत्व 'बंद' हो जाते हैं — पौधा कैल्शियम, मैग्नीशियम या लोहा नहीं सोख सकता। पत्तियां फीकी पड़ती हैं और विकास धीमा होता है।",
+    "पोषक तत्व 'बंद' हो जाते हैं - पौधा कैल्शियम, मैग्नीशियम या लोहा नहीं सोख सकता। पत्तियां फीकी पड़ती हैं और विकास धीमा होता है।",
   help_term_ph_ai:
     "अगर pH 5.5 से कम हो, Demeter स्वचालित रूप से base solution (pH Up) डालता है। अगर pH 6.5 से ज्यादा हो, तो acid (pH Down) डालता है। यह कुछ ही मिनटों में होता है, बिना आपके किए।",
   help_term_ph_manual:
@@ -428,9 +446,9 @@ const HELP_HI = {
   help_term_ec: "EC (पानी में पोषक तत्वों की मात्रा)",
   help_term_ec_short: "EC",
   help_term_ec_simple:
-    "EC बताता है कि पानी में कितने पोषक तत्व घुले हैं। चाय बनाने की तरह सोचें — थोड़ी चाय ठीक है, लेकिन बहुत गाढ़ी चाय कड़वी और हानिकारक होती है। EC बताता है कि पानी में पौधे के लिए सही मात्रा में 'खाना' है या नहीं।",
+    "EC बताता है कि पानी में कितने पोषक तत्व घुले हैं। चाय बनाने की तरह सोचें - थोड़ी चाय ठीक है, लेकिन बहुत गाढ़ी चाय कड़वी और हानिकारक होती है। EC बताता है कि पानी में पौधे के लिए सही मात्रा में 'खाना' है या नहीं।",
   help_term_ec_detail:
-    "EC (विद्युत चालकता) को dS/m में मापा जाता है। शुद्ध पानी बहुत कम बिजली चलाता है। जब आप उर्वरक के नमक घोलते हैं, तो यह ज्यादा बिजली चलाता है। सेंसर इसे मापकर पोषक तत्वों की सांद्रता निर्धारित करता है। ज्यादा EC = बहुत अधिक नमक — यह जड़ों से पानी खींचता है (osmotic तनाव)।",
+    "EC (विद्युत चालकता) को dS/m में मापा जाता है। शुद्ध पानी बहुत कम बिजली चलाता है। जब आप उर्वरक के नमक घोलते हैं, तो यह ज्यादा बिजली चलाता है। सेंसर इसे मापकर पोषक तत्वों की सांद्रता निर्धारित करता है। ज्यादा EC = बहुत अधिक नमक - यह जड़ों से पानी खींचता है (osmotic तनाव)।",
   help_term_ec_range: "0.8 - 2.5 dS/m",
   help_term_ec_low:
     "पौधा भूखा है। पत्तियां फीकी पड़ती हैं, विकास धीमा होता है, उपज कम होती है। पौधे के पास पानी है लेकिन खाना नहीं।",
@@ -449,7 +467,7 @@ const HELP_HI = {
   help_term_humidity_simple:
     "नमी बताती है कि हवा कितनी नम या सूखी है। बहुत नम दिन पर आपको पसीना आता है। पौधे भी अपनी पत्तियों में छोटे छेदों से 'सांस' लेते हैं। अगर हवा बहुत नम हो, तो ये छेद बंद हो जाते हैं और फफूंद उगती है। बहुत सूखी हवा में पत्तियां जल्दी सूख जाती हैं।",
   help_term_humidity_detail:
-    "नमी को Relative Humidity (RH%) में मापा जाता है। पौधे stomata (छोटे छिद्र) से गैस और जल वाष्प का आदान-प्रदान करते हैं। ज्यादा नमी में, पत्तियों से वाष्पीकरण कम होता है, जिससे 'transpiration pump' धीमा होता है — यही पोषक तत्व सोखने की प्रक्रिया को चलाता है। 85% से ज्यादा नमी में फफूंद रोग जैसे powdery mildew और botrytis के लिए आदर्श स्थितियां बन जाती हैं।",
+    "नमी को Relative Humidity (RH%) में मापा जाता है। पौधे stomata (छोटे छिद्र) से गैस और जल वाष्प का आदान-प्रदान करते हैं। ज्यादा नमी में, पत्तियों से वाष्पीकरण कम होता है, जिससे 'transpiration pump' धीमा होता है - यही पोषक तत्व सोखने की प्रक्रिया को चलाता है। 85% से ज्यादा नमी में फफूंद रोग जैसे powdery mildew और botrytis के लिए आदर्श स्थितियां बन जाती हैं।",
   help_term_humidity_range: "40% - 80% RH",
   help_term_humidity_low:
     "पत्तियां मुड़ती और सूखती हैं। stomata बंद हो जाते हैं, प्रकाश संश्लेषण और पोषक तत्व अवशोषण रुक जाता है।",
@@ -458,7 +476,7 @@ const HELP_HI = {
   help_term_humidity_ai:
     "Demeter हवा और नमी को नियंत्रित करने के लिए पंखे की गति स्वचालित रूप से बदलता है। ज्यादा नमी में पंखे तेज होते हैं। atmospheric agent इसे लगातार monitor और adjust करता है।",
   help_term_humidity_manual:
-    "अगर अधिकतम पंखे की गति के बावजूद नमी बहुत ज्यादा रहे, तो यह structural समस्या हो सकती है — खराब ventilation, leaking irrigation, या टूटा हुआ HVAC। शारीरिक हस्तक्षेप जरूरी है।",
+    "अगर अधिकतम पंखे की गति के बावजूद नमी बहुत ज्यादा रहे, तो यह structural समस्या हो सकती है - खराब ventilation, leaking irrigation, या टूटा हुआ HVAC। शारीरिक हस्तक्षेप जरूरी है।",
   help_term_humidity_agri:
     "खुली खेती में नमी मौसम पर निर्भर होती है। इनडोर/हाइड्रोपोनिक खेती का सबसे बड़ा फायदा नमी नियंत्रण है। vegetative growth में 60-70% और flowering में 40-50% नमी रखने से रोग कम होते हैं और उपज बढ़ती है।",
 
@@ -468,7 +486,7 @@ const HELP_HI = {
   help_term_temp_simple:
     "तापमान बताता है कि हवा कितनी गर्म या ठंडी है। पौधे भी इंसानों की तरह एक आरामदायक तापमान पसंद करते हैं। बहुत ठंडा होने पर वे 'धीमे' पड़ जाते हैं और बढ़ना बंद कर देते हैं। बहुत गर्म होने पर उन्हें 'heat stroke' होता है और पानी में बैक्टीरिया तेजी से बढ़ सकते हैं।",
   help_term_temp_detail:
-    "हवा का तापमान प्रकाश संश्लेषण, श्वसन, एंजाइम गतिविधि और transpiration को सीधे प्रभावित करता है। पानी का तापमान भी उतना ही महत्वपूर्ण है — गर्म पानी में कम dissolved oxygen होती है, और जड़ों को oxygen चाहिए। 15°C से कम पर एंजाइम प्रतिक्रियाएं बहुत धीमी हो जाती हैं। 30°C से ज्यादा पर, pathogenic bacteria root zone में तेजी से बढ़ते हैं।",
+    "हवा का तापमान प्रकाश संश्लेषण, श्वसन, एंजाइम गतिविधि और transpiration को सीधे प्रभावित करता है। पानी का तापमान भी उतना ही महत्वपूर्ण है - गर्म पानी में कम dissolved oxygen होती है, और जड़ों को oxygen चाहिए। 15°C से कम पर एंजाइम प्रतिक्रियाएं बहुत धीमी हो जाती हैं। 30°C से ज्यादा पर, pathogenic bacteria root zone में तेजी से बढ़ते हैं।",
   help_term_temp_range: "18°C - 28°C",
   help_term_temp_low:
     "विकास लगभग रुक जाता है। ठंडे पानी में जड़ें सड़ सकती हैं। पौधा बौना और काला दिखता है।",
@@ -485,7 +503,7 @@ const HELP_HI = {
   help_agent_fetch_name: "Fetch Agent",
   help_agent_fetch_role: "सभी सेंसर डेटा पढ़ता है",
   help_agent_fetch_detail:
-    "यह agent pH, EC, तापमान, नमी की रीडिंग और पौधे की तस्वीरें एकत्र करता है। यह सिस्टम की आंखें और कान हैं — सब कुछ यहीं से शुरू होता है।",
+    "यह agent pH, EC, तापमान, नमी की रीडिंग और पौधे की तस्वीरें एकत्र करता है। यह सिस्टम की आंखें और कान हैं - सब कुछ यहीं से शुरू होता है।",
 
   help_agent_judge_name: "Judge Agent",
   help_agent_judge_role: "फसल के स्वास्थ्य का मूल्यांकन करता है",
@@ -495,7 +513,7 @@ const HELP_HI = {
   help_agent_strategy_name: "Strategy Agent",
   help_agent_strategy_role: "क्या कार्रवाई करनी है यह तय करता है",
   help_agent_strategy_detail:
-    "यह दिमाग है। reinforcement learning का उपयोग करता है — हजारों पिछले cycles से सीखा है कि हर फसल के प्रकार और स्थिति में कौन सी कार्रवाई सबसे अच्छी है।",
+    "यह दिमाग है। reinforcement learning का उपयोग करता है - हजारों पिछले cycles से सीखा है कि हर फसल के प्रकार और स्थिति में कौन सी कार्रवाई सबसे अच्छी है।",
 
   help_agent_research_name: "Research Agent",
   help_agent_research_role: "समान मामलों के लिए memory जांचता है",
@@ -505,7 +523,7 @@ const HELP_HI = {
   help_agent_execute_name: "Execute Agent",
   help_agent_execute_role: "hardware को commands भेजता है",
   help_agent_execute_detail:
-    "एक बार योजना confirm होने पर, यह agent physical actuators — pumps, fans, dosing systems — को actual commands भेजता है। digital निर्णयों को real-world actions में बदलता है।",
+    "एक बार योजना confirm होने पर, यह agent physical actuators - pumps, fans, dosing systems - को actual commands भेजता है। digital निर्णयों को real-world actions में बदलता है।",
 
   help_agent_explainer_name: "Explainer Agent",
   help_agent_explainer_role: "सरल भाषा में reasoning लिखता है",
@@ -517,7 +535,7 @@ const HELP_HI = {
   help_stage_seedling_desc:
     "पौधा बीज से अभी-अभी उगा है। यह बहुत छोटा, नाजुक है और अपनी पहली पत्तियां उगाना शुरू कर रहा है।",
   help_stage_seedling_tips:
-    "🌡️ तापमान गर्म रखें (22-26°C)। 💧 EC बहुत कम रखें (0.5-1.0) — ज्यादा पोषक तत्व नाजुक जड़ों को नुकसान पहुंचाते हैं। 💡 रोशनी हल्की होनी चाहिए। यह सबसे नाजुक अवस्था है।",
+    "🌡️ तापमान गर्म रखें (22-26°C)। 💧 EC बहुत कम रखें (0.5-1.0) - ज्यादा पोषक तत्व नाजुक जड़ों को नुकसान पहुंचाते हैं। 💡 रोशनी हल्की होनी चाहिए। यह सबसे नाजुक अवस्था है।",
 
   help_stage_vegetative: "वानस्पतिक (Vegetative)",
   help_stage_vegetative_desc:
@@ -527,17 +545,17 @@ const HELP_HI = {
 
   help_stage_flowering: "फूल (Flowering)",
   help_stage_flowering_desc:
-    "पौधा फूल बनाना शुरू करता है। यह एक महत्वपूर्ण अवस्था है — यहां की स्थितियां सीधे प्रभावित करती हैं कि आपको कितनी उपज मिलेगी।",
+    "पौधा फूल बनाना शुरू करता है। यह एक महत्वपूर्ण अवस्था है - यहां की स्थितियां सीधे प्रभावित करती हैं कि आपको कितनी उपज मिलेगी।",
   help_stage_flowering_tips:
-    "🌸 bud rot रोकने के लिए नमी 50-60% तक कम करें। 🧪 पोषक तत्व बदलें — nitrogen कम, phosphorus/potassium ज्यादा। फूल गिरने से बचाने के लिए पौधे को धीरे से संभालें।",
+    "🌸 bud rot रोकने के लिए नमी 50-60% तक कम करें। 🧪 पोषक तत्व बदलें - nitrogen कम, phosphorus/potassium ज्यादा। फूल गिरने से बचाने के लिए पौधे को धीरे से संभालें।",
 
   help_stage_fruiting: "फल (Fruiting)",
   help_stage_fruiting_desc:
     "फूलों पर परागण हो चुका है और अब फल या अंतिम उपज बन रही है। पौधा अपनी सारी ऊर्जा कटाई में लगा रहा है।",
   help_stage_fruiting_tips:
-    "🍅 EC और pH में स्थिरता बनाए रखें — अब उतार-चढ़ाव से blossom end rot या splitting हो सकती है। 📉 नमी 40-50% तक कम करें। परिपक्वता पर नज़र रखें — सही समय पर काटें!",
+    "🍅 EC और pH में स्थिरता बनाए रखें - अब उतार-चढ़ाव से blossom end rot या splitting हो सकती है। 📉 नमी 40-50% तक कम करें। परिपक्वता पर नज़र रखें - सही समय पर काटें!",
 
-  // Manual
+  // Manual Intervention
   help_manual_disease_title: "बीमारी या कीट का प्रकोप",
   help_manual_disease_desc:
     "AI computer vision से दृश्य असामान्यताएं पकड़ सकता है, लेकिन शारीरिक रूप से बीमार पत्तियां नहीं हटा सकता, कीटनाशक स्प्रे नहीं कर सकता, या संक्रमित पौधों को अलग नहीं कर सकता।",
@@ -561,6 +579,24 @@ const HELP_HI = {
     "बिजली कटौती, बाढ़, अत्यधिक गर्मी, या growing area को structural क्षति के मामले में, मानवीय हस्तक्षेप हमेशा जरूरी है।",
   help_manual_extreme_action:
     "backup power plan (generator या UPS) रखें। manual pH और EC test kits उपलब्ध रखें। digital systems विफल होने पर manually nutrients adjust करना जानें।",
+
+  // How to Add a Crop
+  help_section_add_crop: "🌿 फसल कैसे जोड़ें",
+  help_add_crop_step1: 'डैशबोर्ड में "फसल जोड़ें" पर क्लिक करें',
+  help_add_crop_step2:
+    "फसल का प्रकार चुनें - लेट्यूस, टमाटर, तुलसी, या स्ट्रॉबेरी",
+  help_add_crop_step3: "एक अनोखी Batch ID और वैकल्पिक स्थान/नोट्स दर्ज करें",
+  help_add_crop_step4:
+    '"फसल दर्ज करें" पर क्लिक करें - सिस्टम स्वचालित रूप से चक्र अवधि और सेंसर सेट करेगा',
+  help_add_crop_step5:
+    "दर्ज होने के बाद, फसल के Info टैब से → एजेंट चक्र चलाएं",
+
+  // Supported Crop Types
+  help_section_crops: "🌱 समर्थित फसल प्रकार",
+  help_crop_lettuce: "लेट्यूस - ~21 दिन · प्रति चक्र 1 घंटा",
+  help_crop_tomato: "टमाटर - ~70 दिन · प्रति चक्र 2 घंटे",
+  help_crop_basil: "तुलसी - ~28 दिन · प्रति चक्र 1 घंटा",
+  help_crop_strawberry: "स्ट्रॉबेरी - ~63 दिन · प्रति चक्र 2 घंटे",
 };
 
 // Sub-components
@@ -695,12 +731,15 @@ function TermCard({ term, lang }) {
 
           {/* Explanation */}
           <p
+            className="animate-fade-in"
             style={{
               fontSize: 13,
               color: "var(--text-2)",
               lineHeight: 1.75,
               margin: 0,
               marginBottom: 16,
+              opacity: 0,
+              animationFillMode: "forwards",
             }}
           >
             {tab === "simple" ? dict[term.simpleKey] : dict[term.detailKey]}
@@ -917,6 +956,7 @@ function AgentCard({ agent, dict }) {
       </div>
       {open && (
         <div
+          className="animate-fade-in"
           style={{
             marginTop: 12,
             paddingTop: 12,
@@ -924,6 +964,8 @@ function AgentCard({ agent, dict }) {
             fontSize: 12,
             color: "var(--text-2)",
             lineHeight: 1.65,
+            opacity: 0,
+            animationFillMode: "forwards",
           }}
         >
           {dict[agent.detailKey]}
@@ -1040,6 +1082,139 @@ function ManualCard({ scenario, dict }) {
   );
 }
 
+function StepCard({ step, dict, index }) {
+  return (
+    <div
+      className="card-hover"
+      style={{
+        padding: "14px 16px",
+        borderRadius: 12,
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 14,
+        transition: "all 0.2s",
+      }}
+    >
+      <div
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 8,
+          background: `${step.color}18`,
+          border: `1px solid ${step.color}40`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          fontFamily: "DM Mono, monospace",
+          fontSize: 12,
+          fontWeight: 700,
+          color: step.color,
+        }}
+      >
+        {step.icon}
+      </div>
+      <span
+        style={{
+          fontSize: 13,
+          color: "var(--text-2)",
+          lineHeight: 1.6,
+          paddingTop: 4,
+        }}
+      >
+        {dict[step.key]}
+      </span>
+    </div>
+  );
+}
+
+function CropTypeCard({ crop, dict }) {
+  return (
+    <div
+      className="card-hover"
+      style={{
+        padding: "16px",
+        borderRadius: 14,
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        transition: "all 0.2s",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 12,
+        }}
+      >
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 10,
+            background: `${crop.color}15`,
+            border: `1px solid ${crop.color}30`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 20,
+            flexShrink: 0,
+          }}
+        >
+          {crop.emoji}
+        </div>
+        <div>
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: 13,
+              color: "var(--text)",
+            }}
+          >
+            {dict[crop.key].split("-")[0].trim()}
+          </div>
+          <div
+            style={{
+              fontSize: 10,
+              fontFamily: "DM Mono, monospace",
+              color: "var(--text-3)",
+              marginTop: 1,
+            }}
+          >
+            ~{crop.days} days · {crop.cycle}/cycle
+          </div>
+        </div>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+        {crop.stages.map((stage, si) => (
+          <span
+            key={stage}
+            style={{
+              fontSize: 9,
+              fontFamily: "DM Mono, monospace",
+              padding: "3px 8px",
+              borderRadius: 5,
+              background:
+                si === crop.stages.length - 1
+                  ? `${crop.color}18`
+                  : "var(--bg-3)",
+              color:
+                si === crop.stages.length - 1 ? crop.color : "var(--text-3)",
+              border: `1px solid ${si === crop.stages.length - 1 ? `${crop.color}35` : "var(--border)"}`,
+              textTransform: "capitalize",
+            }}
+          >
+            {stage}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // MAIN
 
 export default function Help() {
@@ -1063,6 +1238,7 @@ export default function Help() {
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
+        className="animate-fade-in"
         style={{
           background: "none",
           border: "none",
@@ -1077,6 +1253,8 @@ export default function Help() {
           fontWeight: 600,
           fontFamily: "inherit",
           transition: "color 0.2s",
+          opacity: 0,
+          animationFillMode: "forwards",
         }}
       >
         <ArrowLeft size={16} />
@@ -1084,7 +1262,14 @@ export default function Help() {
       </button>
 
       {/* Page Header */}
-      <div style={{ marginBottom: 28 }}>
+      <div
+        className="animate-slide-down-right"
+        style={{
+          marginBottom: 28,
+          opacity: 0,
+          animationFillMode: "forwards",
+        }}
+      >
         <div
           style={{
             display: "flex",
@@ -1126,38 +1311,51 @@ export default function Help() {
         </div>
       </div>
 
-      {/* Section 1: Sensor Terms */}
-      <section
-        className="animate-fade-up"
-        style={{
-          marginBottom: 36,
-          animationDelay: "0.1s",
-          opacity: 0,
-          animationFillMode: "forwards",
-        }}
-      >
-        <SectionHeader>{dict["help_section_terms"]}</SectionHeader>
+      {/* Section: Sensor Terms */}
+      <section style={{ marginBottom: 36 }}>
+        <div
+          className="animate-fade-up"
+          style={{
+            animationDelay: "0.1s",
+            opacity: 0,
+            animationFillMode: "forwards",
+          }}
+        >
+          <SectionHeader>{dict["help_section_terms"]}</SectionHeader>
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {TERMS.map((term) => (
-            <TermCard key={term.id} term={term} lang={lang} />
+          {TERMS.map((term, i) => (
+            <div
+              key={term.id}
+              className="animate-fade-up"
+              style={{
+                animationDelay: `${0.15 + i * 0.05}s`,
+                opacity: 0,
+                animationFillMode: "forwards",
+              }}
+            >
+              <TermCard term={term} lang={lang} />
+            </div>
           ))}
         </div>
       </section>
 
-      {/* Section 2: AI Agents */}
-      <section
-        className="animate-fade-up"
-        style={{
-          marginBottom: 36,
-          animationDelay: "0.2s",
-          opacity: 0,
-          animationFillMode: "forwards",
-        }}
-      >
-        <SectionHeader>{dict["help_section_agents"]}</SectionHeader>
+      {/* Section: AI Agents */}
+      <section style={{ marginBottom: 36 }}>
+        <div
+          className="animate-fade-up"
+          style={{
+            animationDelay: "0.2s",
+            opacity: 0,
+            animationFillMode: "forwards",
+          }}
+        >
+          <SectionHeader>{dict["help_section_agents"]}</SectionHeader>
+        </div>
 
         {/* Pipeline flow visualization */}
         <div
+          className="animate-fade-up"
           style={{
             padding: "14px 16px",
             borderRadius: 12,
@@ -1168,6 +1366,9 @@ export default function Help() {
             alignItems: "center",
             gap: 6,
             flexWrap: "wrap",
+            animationDelay: "0.25s",
+            opacity: 0,
+            animationFillMode: "forwards",
           }}
         >
           {["Fetch", "Judge", "Strategy", "Research", "Execute", "Explain"].map(
@@ -1195,23 +1396,34 @@ export default function Help() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {AI_AGENTS.map((agent) => (
-            <AgentCard key={agent.id} agent={agent} dict={dict} />
+          {AI_AGENTS.map((agent, i) => (
+            <div
+              key={agent.id}
+              className="animate-fade-up"
+              style={{
+                animationDelay: `${0.3 + i * 0.05}s`,
+                opacity: 0,
+                animationFillMode: "forwards",
+              }}
+            >
+              <AgentCard agent={agent} dict={dict} />
+            </div>
           ))}
         </div>
       </section>
 
-      {/* Section 3: Growth Stages */}
-      <section
-        className="animate-fade-up"
-        style={{
-          marginBottom: 36,
-          animationDelay: "0.3s",
-          opacity: 0,
-          animationFillMode: "forwards",
-        }}
-      >
-        <SectionHeader>{dict["help_section_stages"]}</SectionHeader>
+      {/* Section: Growth Stages */}
+      <section style={{ marginBottom: 36 }}>
+        <div
+          className="animate-fade-up"
+          style={{
+            animationDelay: "0.4s",
+            opacity: 0,
+            animationFillMode: "forwards",
+          }}
+        >
+          <SectionHeader>{dict["help_section_stages"]}</SectionHeader>
+        </div>
         <div
           style={{
             display: "grid",
@@ -1219,26 +1431,150 @@ export default function Help() {
             gap: 12,
           }}
         >
-          {STAGES.map((stage) => (
-            <StageCard key={stage.id} stage={stage} dict={dict} />
+          {STAGES.map((stage, i) => (
+            <div
+              key={stage.id}
+              className="animate-fade-up"
+              style={{
+                animationDelay: `${0.45 + i * 0.05}s`,
+                opacity: 0,
+                animationFillMode: "forwards",
+              }}
+            >
+              <StageCard stage={stage} dict={dict} />
+            </div>
           ))}
         </div>
       </section>
 
-      {/* Section 4: Manual Intervention */}
-      <section
-        className="animate-fade-up"
-        style={{
-          marginBottom: 36,
-          animationDelay: "0.4s",
-          opacity: 0,
-          animationFillMode: "forwards",
-        }}
-      >
-        <SectionHeader>{dict["help_section_manual"]}</SectionHeader>
+      {/* Section: Manual Intervention */}
+      <section style={{ marginBottom: 36 }}>
+        <div
+          className="animate-fade-up"
+          style={{
+            animationDelay: "0.5s",
+            opacity: 0,
+            animationFillMode: "forwards",
+          }}
+        >
+          <SectionHeader>{dict["help_section_manual"]}</SectionHeader>
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {MANUAL_SCENARIOS.map((s) => (
-            <ManualCard key={s.id} scenario={s} dict={dict} />
+          {MANUAL_SCENARIOS.map((s, i) => (
+            <div
+              key={s.id}
+              className="animate-fade-up"
+              style={{
+                animationDelay: `${0.55 + i * 0.05}s`,
+                opacity: 0,
+                animationFillMode: "forwards",
+              }}
+            >
+              <ManualCard scenario={s} dict={dict} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Section: How to Add a Crop */}
+      <section style={{ marginBottom: 36 }}>
+        <div
+          className="animate-fade-up"
+          style={{
+            animationDelay: "0.6s",
+            opacity: 0,
+            animationFillMode: "forwards",
+          }}
+        >
+          <SectionHeader>{dict["help_section_add_crop"]}</SectionHeader>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {[
+            { key: "help_add_crop_step1", icon: "1", color: "var(--blue)" },
+            { key: "help_add_crop_step2", icon: "2", color: "var(--green)" },
+            { key: "help_add_crop_step3", icon: "3", color: "var(--amber)" },
+            { key: "help_add_crop_step4", icon: "4", color: "var(--blue)" },
+            { key: "help_add_crop_step5", icon: "5", color: "var(--green)" },
+          ].map((step, i) => (
+            <div
+              key={step.key}
+              className="animate-fade-up"
+              style={{
+                animationDelay: `${0.65 + i * 0.05}s`,
+                opacity: 0,
+                animationFillMode: "forwards",
+              }}
+            >
+              <StepCard step={step} dict={dict} index={i} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Section: Supported Crops */}
+      <section style={{ marginBottom: 36 }}>
+        <div
+          className="animate-fade-up"
+          style={{
+            animationDelay: "0.7s",
+            opacity: 0,
+            animationFillMode: "forwards",
+          }}
+        >
+          <SectionHeader>{dict["help_section_crops"]}</SectionHeader>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: 12,
+          }}
+        >
+          {[
+            {
+              key: "help_crop_lettuce",
+              emoji: "🥬",
+              days: 21,
+              cycle: "1h",
+              stages: ["Seedling", "Vegetative", "Harvest"],
+              color: "var(--green)",
+            },
+            {
+              key: "help_crop_tomato",
+              emoji: "🍅",
+              days: 70,
+              cycle: "2h",
+              stages: ["Seedling", "Vegetative", "Flowering", "Fruiting"],
+              color: "var(--red)",
+            },
+            {
+              key: "help_crop_basil",
+              emoji: "🌿",
+              days: 28,
+              cycle: "1h",
+              stages: ["Seedling", "Vegetative", "Harvest"],
+              color: "var(--green)",
+            },
+            {
+              key: "help_crop_strawberry",
+              emoji: "🍓",
+              days: 63,
+              cycle: "2h",
+              stages: ["Seedling", "Vegetative", "Flowering", "Fruiting"],
+              color: "var(--amber)",
+            },
+          ].map((crop, i) => (
+            <div
+              key={crop.key}
+              className="animate-fade-up"
+              style={{
+                animationDelay: `${0.75 + i * 0.05}s`,
+                opacity: 0,
+                animationFillMode: "forwards",
+              }}
+            >
+              <CropTypeCard crop={crop} dict={dict} />
+            </div>
           ))}
         </div>
       </section>
@@ -1258,7 +1594,7 @@ export default function Help() {
           gap: 16,
           flexWrap: "wrap",
           marginBottom: 8,
-          animationDelay: "0.5s",
+          animationDelay: "0.8s",
           opacity: 0,
           animationFillMode: "forwards",
         }}
