@@ -692,7 +692,7 @@ async def process_similar_crops(crop_id: str, crop_name: str, payload_json: str)
             with_vectors=True,  # <-- we need the actual stored vector
         )
 
-        query_vector = None
+        query = None
 
         if points:
             # Pick the point with the highest sequence_number
@@ -703,10 +703,10 @@ async def process_similar_crops(crop_id: str, crop_name: str, payload_json: str)
                 if isinstance(v, dict):
                     # Named vector collections — grab the default/first key
                     v = next(iter(v.values()))
-                query_vector = list(v)
+                query = list(v)
 
         # Fallback: build sensor vector from payload JSON
-        if query_vector is None:
+        if query is None:
             print(
                 f"[SimilarCrops] No stored vector for {crop_id}, falling back to sensor encoding"
             )
@@ -730,11 +730,11 @@ async def process_similar_crops(crop_id: str, crop_name: str, payload_json: str)
                     # Pad to COLLECTION vector size (516) with zeros
                     full_vec = np.zeros(516, dtype=np.float32)
                     full_vec[-len(sensor_vec) :] = sensor_vec
-                    query_vector = full_vec.tolist()
+                    query = full_vec.tolist()
             except Exception as enc_err:
                 print(f"[SimilarCrops] Sensor encoding fallback failed: {enc_err}")
 
-        if query_vector is None:
+        if query is None:
             return {
                 "status": "error",
                 "message": f"Could not build a query vector for crop_id={crop_id}",
@@ -753,7 +753,7 @@ async def process_similar_crops(crop_id: str, crop_name: str, payload_json: str)
 
         search_results = client.query_points(
             collection_name=COLLECTION_NAME,
-            query_vector=query_vector,
+            query=query,
             query_filter=exclude_filter,
             limit=6,
             with_payload=True,
