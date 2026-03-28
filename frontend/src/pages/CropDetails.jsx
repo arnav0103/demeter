@@ -38,6 +38,7 @@ import {
   calculateMaturity,
   getDaysRemaining,
   getCurrentStage,
+  getEffectiveElapsedHours,
   CROP_LIFECYCLES,
   CROP_CYCLE_HOURS,
 } from "../utils/dataUtils";
@@ -447,11 +448,7 @@ function InfoTab({ cropDoc, cropId, navigate, t }) {
         day: "numeric",
       })
     : "-";
-  const daysSince = cropDoc.planted_at
-    ? Math.floor(
-        (Date.now() - new Date(cropDoc.planted_at).getTime()) / 86400000,
-      )
-    : null;
+  const daysSince = Math.floor(getEffectiveElapsedHours(cropDoc) / 24) || null;
 
   const sensorIds = cropDoc.sensor_ids || {};
   const SENSORS_DISPLAY = [

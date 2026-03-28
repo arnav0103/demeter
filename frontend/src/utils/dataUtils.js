@@ -133,6 +133,36 @@ export const extractSensors = (payload) => {
   };
 };
 
+// Effective elapsed hours
+export const getEffectiveElapsedHours = (payload) => {
+  if (!payload) return 0;
+
+  // PRIMARY: sequence_number × cycle_duration_hours
+  const seqNum = payload.sequence_number || 0;
+  if (seqNum > 0) {
+    const crop = (payload.crop || "").toLowerCase();
+    const cycleDuration =
+      payload.cycle_duration_hours || CROP_CYCLE_HOURS[crop] || 1;
+    return seqNum * cycleDuration;
+  }
+
+  // SECONDARY: simulated_age_hours (for crops with 0 sequences)
+  if (
+    typeof payload.simulated_age_hours === "number" &&
+    payload.simulated_age_hours > 0
+  ) {
+    return payload.simulated_age_hours;
+  }
+
+  // FALLBACK: real wall-clock age
+  if (payload.planted_at) {
+    return (
+      (Date.now() - new Date(payload.planted_at).getTime()) / (1000 * 60 * 60)
+    );
+  }
+  return 0;
+};
+
 // Maturity
 export const calculateMaturity = (payload) => {
   // Legacy call: calculateMaturity(seqNumber)
@@ -142,15 +172,12 @@ export const calculateMaturity = (payload) => {
 
   const crop = (payload.crop || "").toLowerCase();
   const lifecycle = CROP_LIFECYCLES[crop];
-  const plantedAt = payload.planted_at;
 
-  if (lifecycle && plantedAt) {
-    const elapsedH =
-      (Date.now() - new Date(plantedAt).getTime()) / (1000 * 60 * 60);
+  if (lifecycle) {
+    const elapsedH = getEffectiveElapsedHours(payload);
     const pct = Math.min((elapsedH / lifecycle.totalHours) * 100, 100);
     return Math.round(pct);
   }
-
   // Fallback: sequence-based estimate
   return Math.min((payload.sequence_number || 0) * 10, 100);
 };
@@ -160,11 +187,9 @@ export const getDaysRemaining = (payload) => {
   if (!payload) return null;
   const crop = (payload.crop || "").toLowerCase();
   const lifecycle = CROP_LIFECYCLES[crop];
-  const plantedAt = payload.planted_at;
-  if (!lifecycle || !plantedAt) return null;
+  if (!lifecycle) return null;
 
-  const elapsedH =
-    (Date.now() - new Date(plantedAt).getTime()) / (1000 * 60 * 60);
+  const elapsedH = getEffectiveElapsedHours(payload);
   const remainH = lifecycle.totalHours - elapsedH;
   if (remainH <= 0) return 0;
   return Math.ceil(remainH / 24);
@@ -175,11 +200,9 @@ export const getCurrentStage = (payload) => {
   if (!payload) return null;
   const crop = (payload.crop || "").toLowerCase();
   const lifecycle = CROP_LIFECYCLES[crop];
-  const plantedAt = payload.planted_at;
-  if (!lifecycle || !plantedAt) return payload.stage || null;
+  if (!lifecycle) return payload.stage || null;
 
-  const elapsedH =
-    (Date.now() - new Date(plantedAt).getTime()) / (1000 * 60 * 60);
+  const elapsedH = getEffectiveElapsedHours(payload);
   const stages = lifecycle.stages;
   for (let i = stages.length - 1; i >= 0; i--) {
     if (elapsedH >= stages[i].startH) return stages[i].name;

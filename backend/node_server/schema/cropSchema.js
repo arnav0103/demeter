@@ -27,6 +27,7 @@ const cropStateSchema = new mongoose.Schema({
   sequence_number: { type: Number, default: 0 },
   cycle_duration_hours: { type: Number, default: 1 },
   total_crop_lifetime_days: { type: Number, default: 0 },
+  simulated_age_hours: { type: Number, default: 0 },
   planted_at: { type: Date, default: Date.now },
   last_updated: { type: Date, default: Date.now },
 

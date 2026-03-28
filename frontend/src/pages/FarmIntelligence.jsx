@@ -23,7 +23,17 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { agentService } from "../api/agentApi";
-import { extractSensors, deriveCropStatus } from "../utils/dataUtils";
+import { fetchCropDetails } from "../api/farmApi";
+import {
+  parsePythonString,
+  extractSensors,
+  deriveCropStatus,
+  calculateMaturity,
+  getEffectiveElapsedHours,
+  getCurrentStage,
+  getDaysRemaining,
+  isReadyToHarvest,
+} from "../utils/dataUtils";
 import {
   AgentActionWidget,
   AgentOutcomeWidget,
@@ -955,7 +965,7 @@ export default function FarmIntelligence() {
 
   // Build rich context for LLM
   const buildLLMContext = useCallback(
-    (cropCtx, similarCrops = []) => {
+    (cropCtx, similarCrops = [], cropHistory = []) => {
       const allCrops = dashboard || [];
 
       if (cropCtx) {
@@ -975,24 +985,79 @@ export default function FarmIntelligence() {
                 .join("\n")
             : "";
 
+        const historySection =
+          cropHistory.length > 1
+            ? `\nACTION HISTORY (last ${cropHistory.length} cycles, newest first):\n` +
+              cropHistory
+                .map((h) => {
+                  const p = h.payload || {};
+                  const rawAction = p.action_taken;
+                  const actionStr =
+                    !rawAction || rawAction === "PENDING_ACTION"
+                      ? "None"
+                      : typeof rawAction === "object"
+                        ? JSON.stringify(rawAction)
+                        : (() => {
+                            const parsed = parsePythonString(rawAction);
+                            return parsed && typeof parsed === "object"
+                              ? JSON.stringify(parsed)
+                              : rawAction;
+                          })();
+                  const explanation =
+                    p.explanation_log &&
+                    p.explanation_log !== "PENDING_ANALYSIS"
+                      ? p.explanation_log.trim()
+                      : null;
+                  const stratIntent = p.strategic_intent || null;
+                  return [
+                    `  Seq #${p.sequence_number ?? "?"} | Stage: ${p.stage || "?"} | Reward: ${p.reward_score ?? "N/A"}`,
+                    `    Action:  ${actionStr}`,
+                    `    Outcome: ${p.outcome && p.outcome !== "PENDING_OBSERVATION" ? p.outcome : "Pending"}`,
+                    stratIntent ? `    Intent:  ${stratIntent}` : null,
+                    explanation ? `    Explain: ${explanation}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join("\n");
+                })
+                .join("\n\n")
+            : "";
+
+        const elapsedH = getEffectiveElapsedHours(p);
+        const maturity = calculateMaturity(p);
+        const currentStage = getCurrentStage(p) || p.stage || "Unknown";
+        const daysRemaining = getDaysRemaining(p);
+        const readyToHarvest = isReadyToHarvest(p);
+
         return `CROP CONTEXT:
 - Crop: ${p.crop || cropCtx.crop}
 - Batch ID: ${p.crop_id || cropCtx.cropId}
-- Growth Stage: ${p.stage || "Unknown"}
+- Growth Stage: ${currentStage}
+- Maturity: ${maturity}%${readyToHarvest ? " ⚠️ READY TO HARVEST" : ""}
+- Simulated Age: ${Math.round(elapsedH)} hours (${Math.floor(elapsedH / 24)} days)
+- Days Until Harvest: ${daysRemaining !== null ? daysRemaining : "N/A"}
 - Sequence Number: ${p.sequence_number || "-"}
-- Last Updated: ${p.timestamp ? new Date(p.timestamp).toLocaleString() : "Unknown"}
+- Last Updated: ${p.last_updated ? new Date(p.last_updated).toLocaleString() : "Unknown"}
 LATEST SENSOR READINGS:
 - pH: ${sensors.ph}
 - EC: ${sensors.ec} dS/m
 - Temperature: ${sensors.temp}°C
 - Humidity: ${sensors.humidity}%
 LATEST AGENT DECISION:
-- Action Taken: ${p.action_taken && p.action_taken !== "PENDING_ACTION" ? p.action_taken : "None recorded"}
+- Action Taken: ${(() => {
+          const a = p.action_taken;
+          if (!a || a === "PENDING_ACTION") return "None recorded";
+          if (typeof a === "object") return JSON.stringify(a, null, 2);
+          const parsed = parsePythonString(a);
+          return parsed && typeof parsed === "object"
+            ? JSON.stringify(parsed, null, 2)
+            : a;
+        })()}
 - Outcome: ${p.outcome && p.outcome !== "PENDING_OBSERVATION" ? p.outcome : "Pending"}
 - Reward Score: ${p.reward_score ?? "N/A"}
 - Strategic Intent: ${p.strategic_intent || "N/A"}
 EXPLANATION LOG:
-${p.explanation_log && p.explanation_log !== "PENDING_ANALYSIS" ? p.explanation_log : "Not yet generated."}${similarSection}
+${p.explanation_log && p.explanation_log !== "PENDING_ANALYSIS" ? p.explanation_log : "Not yet generated."}
+${similarSection}${historySection}
 FLEET OVERVIEW (for comparison):
 - Total crops: ${fleetStats.total}
 - Healthy: ${fleetStats.healthy}, Needs Attention: ${fleetStats.attention}, Critical: ${fleetStats.critical}`.trim();
@@ -1003,7 +1068,10 @@ FLEET OVERVIEW (for comparison):
           .map((d) => {
             const p = d.payload || {};
             const s = extractSensors(p);
-            return `  - ${p.crop || "?"} (${p.crop_id || d.id}): Stage=${p.stage}, pH=${s.ph}, EC=${s.ec}, T=${s.temp}°, H=${s.humidity}%, Status=${deriveCropStatus(p)}, Outcome=${p.outcome || "Pending"}, Action=${p.action_taken || "Pending"}`;
+            const maturity = calculateMaturity(p);
+            const stage = getCurrentStage(p) || p.stage || "Unknown";
+            const ready = isReadyToHarvest(p);
+            return `  - ${p.crop || "?"} (${p.crop_id || d.id}): Stage=${stage}, Maturity=${maturity}%${ready ? " [HARVEST READY]" : ""}, pH=${s.ph}, EC=${s.ec}, T=${s.temp}°, H=${s.humidity}%, Status=${deriveCropStatus(p)}, Outcome=${p.outcome || "Pending"}`;
           })
           .join("\n");
         return `FLEET OVERVIEW:
@@ -1043,15 +1111,12 @@ SYSTEM: Hydroponic multi-crop farm management system (Demeter).`.trim();
               selectedCrop.crop,
               selectedCrop.payload,
             );
-            if (searchData.results) {
-              similarCrops = searchData.results
-                .filter((r) => r.payload?.crop_id !== selectedCrop.cropId)
-                .slice(0, 5)
-                .map((r) => ({
-                  id: r.id,
-                  score: r.score || 0,
-                  payload: r.payload,
-                }));
+            if (searchData.status === "success" && searchData.results?.length) {
+              similarCrops = searchData.results.slice(0, 5).map((r) => ({
+                id: r.id,
+                score: r.score || 0,
+                payload: r.payload,
+              }));
               setRelatedCrops(similarCrops.slice(0, 3));
             }
           } catch (e) {
@@ -1059,7 +1124,22 @@ SYSTEM: Hydroponic multi-crop farm management system (Demeter).`.trim();
           }
         }
 
-        const context = buildLLMContext(selectedCrop, similarCrops);
+        let cropHistory = [];
+        if (selectedCrop) {
+          try {
+            const hist = await fetchCropDetails(selectedCrop.cropId);
+            // hist is sorted desc by sequence_number, take last 10 for context
+            cropHistory = (hist || []).slice(0, 10);
+          } catch (e) {
+            console.warn("History fetch failed:", e);
+          }
+        }
+
+        const context = buildLLMContext(
+          selectedCrop,
+          similarCrops,
+          cropHistory,
+        );
         const data = await agentService.askDemeter(query, context, lang);
 
         setLlmThinking(data.thinking || "");
@@ -1129,16 +1209,13 @@ SYSTEM: Hydroponic multi-crop farm management system (Demeter).`.trim();
               selectedCrop.crop,
               selectedCrop.payload,
             );
-            if (simData.results) {
+            if (simData.status === "success" && simData.results?.length) {
               setRelatedCrops(
-                simData.results
-                  .filter((r) => r.payload?.crop_id !== selectedCrop.cropId)
-                  .slice(0, 3)
-                  .map((r) => ({
-                    id: r.id,
-                    score: r.score || 0,
-                    payload: r.payload,
-                  })),
+                simData.results.slice(0, 3).map((r) => ({
+                  id: r.id,
+                  score: r.score || 0,
+                  payload: r.payload,
+                })),
               );
             }
           } catch (e) {

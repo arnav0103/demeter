@@ -20,9 +20,12 @@ load_dotenv(env_path)
 
 MONGO_URI = os.environ.get("MONGODB_URI")
 mongo_client = MongoClient(MONGO_URI)
-db = mongo_client["test"]
+db = mongo_client.get_default_database()
 crops_collection = db["cropstates"]
 sim_state_collection = db["simulator_state"]
+
+print(f"[DEBUG] MongoDB connected to DB: '{db.name}'")
+print(f"[DEBUG] MONGO_URI = {MONGO_URI[:40] if MONGO_URI else 'NOT SET'}...")
 
 MODEL_PATH = "models/PPO/lettuce_brain_v1.zip"
 HISTORY_LEN = 20
@@ -234,7 +237,10 @@ async def get_all_states():
 
     for crop in db_crops:
         cid = crop.get("crop_id")
-        if not cid or cid not in simulators:
+        if not cid:
+            continue
+        if cid not in simulators:
+            print(f"⚠️ Crop {cid} not in simulators after sync — skipping")
             continue
 
         crop_type = crop.get("crop", "lettuce").lower()
@@ -259,7 +265,7 @@ async def get_all_states():
             f" current_tick: {current_tick} | crop_id: {cid} | age_hours: {age_hours} | stage: {new_stage} | cycle_duration: {cycle_duration}"
         )
 
-        if current_tick % cycle_duration != 0:
+        if current_tick % cycle_duration != 0 and current_tick != 1:
             continue
 
         sim = simulators[cid]

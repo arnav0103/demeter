@@ -139,7 +139,8 @@ async def process_search(file: UploadFile, sensors_str: str, builder):
         # Metadata construction
         metadata = {
             "crop": target_crop,
-            "stage": raw_sensor_data.get("stage", "Unknown"),
+            "stage": raw_sensor_data.get("stage")
+            or raw_sensor_data.get("metadata", {}).get("stage", "seedling"),
             "crop_id": target_crop_id,
             "sequence_number": seq_num,
             "sensors": clean_sensors,
@@ -298,7 +299,8 @@ async def process_cycle_stream(file: UploadFile, sensors_str: str, builder):
 
         metadata = {
             "crop": target_crop,
-            "stage": raw_sensor_data.get("stage", "Unknown"),
+            "stage": raw_sensor_data.get("stage")
+            or raw_sensor_data.get("metadata", {}).get("stage", "seedling"),
             "crop_id": target_crop_id,
             "sequence_number": seq_num,
             "sensors": clean_sensors,
@@ -619,9 +621,8 @@ async def process_audio_search(file: UploadFile):
 
 async def process_ask_query(query: str, context: str, language: str):
     """
-    Directly answers user questions using farm data context.
-    The context string already contains similar-crop data pre-built by the
-    frontend; this function just passes it through to the LLM.
+    Answers natural language questions about the farm using pre-built context
+    from the frontend.
     """
     try:
         lang_instr = (
@@ -629,19 +630,23 @@ async def process_ask_query(query: str, context: str, language: str):
             if language == "hi"
             else "Respond entirely in English."
         )
-        system_prompt = f"""
-        You are Demeter Intelligence, an expert AI agronomist for a hydroponic farm.
-        Use the FARM DATA below to answer the user's question accurately and concisely.
 
-        {context}
+        system_prompt = f"""You are Demeter Intelligence — an expert AI agronomist embedded in a hydroponic farm management system.
 
-        Instructions:
-        - Wrap your internal reasoning in <thinking>...</thinking> tags.
-        - After </thinking>, give a clear direct answer.
-        - When referencing specific crops, mention their crop_id in parentheses.
-        - If the question requires comparing multiple crops, address each one.
-        - CRITICAL: {lang_instr}
-        """
+ROLE:
+- Answer questions about crop health, sensor readings, agent decisions, and farm trends
+- Compare crops when asked, citing their crop_id
+- Give actionable recommendations grounded in the data
+- Be concise: lead with the direct answer, then explain
+
+REASONING:
+Wrap your internal reasoning in <thinking>...</thinking> before your answer.
+Keep thinking brief — focus on which crops are relevant and what the data says.
+
+FARM DATA:
+{context}
+
+LANGUAGE: {lang_instr}"""
 
         response = supervisor.model.invoke(
             [SystemMessage(content=system_prompt), HumanMessage(content=query)]
@@ -651,129 +656,121 @@ async def process_ask_query(query: str, context: str, language: str):
         thinking = ""
         answer = raw_text
 
-        think_match = re.search(r"<thinking>(.*?)</thinking>", raw_text, re.DOTALL)
+        # Support both <thinking> and <think> tags
+        think_match = re.search(
+            r"<think(?:ing)?>(.*?)</think(?:ing)?>", raw_text, re.DOTALL
+        )
         if think_match:
             thinking = think_match.group(1).strip()
             answer = re.sub(
-                r"<thinking>.*?</thinking>", "", raw_text, flags=re.DOTALL
+                r"<think(?:ing)?>(.*?)</think(?:ing)?>", "", raw_text, flags=re.DOTALL
             ).strip()
 
         return {"status": "success", "thinking": thinking, "answer": answer}
-    except Exception as e:
-        import traceback
 
+    except Exception as e:
         traceback.print_exc()
         return {"status": "error", "message": str(e)}
 
 
 async def process_similar_crops(crop_id: str, crop_name: str, payload_json: str):
     """
-    Find cosine-similar crops using the ACTUAL stored vector for crop_id
+    Find cosine-similar crops using the latest stored vector for crop_id.
+    Falls back to a zero-padded sensor vector if no stored vector is found.
     """
     import json as _json
     import numpy as np
 
     try:
-        # Find the latest point for this crop
-        filter_latest = models.Filter(
-            must=[
-                models.FieldCondition(
-                    key="crop_id",
-                    match=models.MatchValue(value=crop_id),
-                )
-            ]
-        )
-
+        # Step 1: Scroll all points for this crop, requesting vectors
         points, _ = client.scroll(
             collection_name=COLLECTION_NAME,
-            scroll_filter=filter_latest,
+            scroll_filter=models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="crop_id",
+                        match=models.MatchValue(value=crop_id),
+                    )
+                ]
+            ),
             limit=100,
             with_payload=True,
-            with_vectors=True,  # <-- we need the actual stored vector
+            with_vectors=True,
         )
 
-        query = None
+        query_vector = None
 
         if points:
             # Pick the point with the highest sequence_number
             best = max(points, key=lambda p: p.payload.get("sequence_number", 0))
             v = best.vector
             if v is not None:
-                # v may be a list or a dict (named vectors); handle both
+                # Handle named-vector collections (dict) vs plain list
                 if isinstance(v, dict):
-                    # Named vector collections — grab the default/first key
                     v = next(iter(v.values()))
-                query = list(v)
+                if len(v) == 516:
+                    query_vector = list(v)
+                else:
+                    print(
+                        f"[SimilarCrops] Unexpected vector length {len(v)} for {crop_id}"
+                    )
 
-        # Fallback: build sensor vector from payload JSON
-        if query is None:
+        # Step 2: Sensor-only fallback — build a 516-dim vector
+        # Vision dims (0–511) stay zero; sensor dims (512–515) are filled in
+        if query_vector is None:
             print(
-                f"[SimilarCrops] No stored vector for {crop_id}, falling back to sensor encoding"
+                f"[SimilarCrops] No usable stored vector for {crop_id}, using sensor fallback"
             )
-            try:
-                from Sentinel.Encoders.TimeSeries import SensorEncoder
+            payload = _json.loads(payload_json) if payload_json else {}
+            raw_sensors = payload.get("sensor_data") or payload.get("sensors") or {}
 
-                payload = _json.loads(payload_json) if payload_json else {}
-                raw_sensors = payload.get("sensor_data") or payload.get("sensors") or {}
-                # Keep only the four numeric sensors
-                clean = {}
-                for k, v in raw_sensors.items():
-                    if k in {"pH", "EC", "temp", "humidity"}:
-                        try:
-                            clean[k] = float(v)
-                        except (TypeError, ValueError):
-                            pass
+            SENSOR_ORDER = ["pH", "EC", "temp", "humidity"]
+            SENSOR_DEFAULTS = {"pH": 6.0, "EC": 1.5, "temp": 23.0, "humidity": 65.0}
 
-                if clean:
-                    encoder = SensorEncoder()
-                    sensor_vec = encoder.encode(clean)  # shape: (4,) or (12,)
-                    # Pad to COLLECTION vector size (516) with zeros
-                    full_vec = np.zeros(516, dtype=np.float32)
-                    full_vec[-len(sensor_vec) :] = sensor_vec
-                    query = full_vec.tolist()
-            except Exception as enc_err:
-                print(f"[SimilarCrops] Sensor encoding fallback failed: {enc_err}")
+            full_vec = np.zeros(516, dtype=np.float32)
+            for i, key in enumerate(SENSOR_ORDER):
+                raw = raw_sensors.get(key)
+                val = raw[-1] if isinstance(raw, list) and raw else raw
+                try:
+                    full_vec[512 + i] = (
+                        float(val) if val is not None else SENSOR_DEFAULTS[key]
+                    )
+                except (TypeError, ValueError):
+                    full_vec[512 + i] = SENSOR_DEFAULTS[key]
 
-        if query is None:
-            return {
-                "status": "error",
-                "message": f"Could not build a query vector for crop_id={crop_id}",
-                "results": [],
-            }
+            query_vector = full_vec.tolist()
 
-        # Cector search, excluding this crop
-        exclude_filter = models.Filter(
-            must_not=[
-                models.FieldCondition(
-                    key="crop_id",
-                    match=models.MatchValue(value=crop_id),
-                )
-            ]
-        )
-
-        search_results = client.query_points(
+        # Step 3: Vector search, excluding the source crop
+        results = client.query_points(
             collection_name=COLLECTION_NAME,
-            query=query,
-            query_filter=exclude_filter,
+            query=query_vector,
+            query_filter=models.Filter(
+                must_not=[
+                    models.FieldCondition(
+                        key="crop_id",
+                        match=models.MatchValue(value=crop_id),
+                    )
+                ]
+            ),
             limit=6,
             with_payload=True,
             with_vectors=False,
         )
+
+        hits = results.points if hasattr(results, "points") else results
 
         return {
             "status": "success",
             "results": [
                 {
                     "id": str(r.id),
-                    "score": float(r.score),
+                    "score": round(float(r.score), 4),
                     "payload": r.payload,
                 }
-                for r in search_results
+                for r in hits
             ],
         }
 
     except Exception as e:
-        import traceback
-
         traceback.print_exc()
         return {"status": "error", "message": str(e), "results": []}

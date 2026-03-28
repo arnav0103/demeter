@@ -469,7 +469,7 @@ export default function RunCycle() {
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
-            padding: "8px 16px",
+            padding: "8px 0px",
             borderBottom: "1px solid rgba(74,222,128,0.15)",
             background: "rgba(74,222,128,0.06)",
           }}
@@ -659,7 +659,7 @@ export default function RunCycle() {
                         <div
                           key={s.name}
                           style={{ width: `${w}%`, textAlign: "center" }}
-                          title={`${s.name}: ${Math.round((s.endH ?? lifecycle.totalHours - s.startH) / 24)}d`}
+                          title={`${s.name}: ${Math.round(((s.endH ?? lifecycle.totalHours) - s.startH) / 24)}d`}
                         >
                           <div
                             style={{
